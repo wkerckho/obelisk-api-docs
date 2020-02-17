@@ -1,84 +1,82 @@
 FORMAT: 1A
-HOST: https://polls.apiblueprint.org/
+HOST: https://obelisk.ilabt.imec.be/api
 
 # Obelisk
 
-Welcome to the developer documentation for Obelisk. The following information will help you to start developing your own applications and integrations on top of Obelisk.
+Welcome to the developer documentation for Obelisk.
 
-The [Getting Started](reference) section 
+1. Make yourself known to the platform by logging in at https://obelisk.ilabt.imec.be
+2. Ensure you have access to the datasets you will be working with [TODO: link to help article on requesting access]
+3. (Optional) Create the necessary clients beforehand [TODO]
 
-## Getting Started
+# Group Authentication
 
-## Questions Collection [/questions]
+# Group Catalog API
 
-### List All Questions [GET]
+## Catalog GraphQL [/catalog/graphql]
+
+### Run Query [POST]
+
++ Request Execute GraphQL Query (application/json)
+    + Attributes (GraphQLRequest)
 
 + Response 200 (application/json)
 
-        [
-            {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 2048
-                    }, {
-                        "choice": "Python",
-                        "votes": 1024
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 512
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 256
-                    }
-                ]
-            }
-        ]
-
-### Create a New Question [POST]
-
-You may create your own question using this action. It takes a JSON
-object containing a question and a collection of answers in the
-form of choices.
-
-+ Request (application/json)
-
         {
-            "question": "Favourite programming language?",
-            "choices": [
-                "Swift",
-                "Python",
-                "Objective-C",
-                "Ruby"
-            ]
-        }
-
-+ Response 201 (application/json)
-
-    + Headers
-
-            Location: /questions/2
-
-    + Body
-
-            {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 0
-                    }, {
-                        "choice": "Python",
-                        "votes": 0
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 0
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 0
-                    }
-                ]
+          "data": {
+            "me": {
+              "id": "U1581692393568",
+              "email": "user1@oblx.io"
             }
+          }
+        }
+            
+# Group Data API
+            
+## Data Ingest [/data/ingest/{datasetId}]
+
+### Ingest [POST]
+
++ Request Ingest Primitive data (application/json)
+
++ Response 204
+
++ Request Ingest JSON data (application/json)
+
++ Response 204
+
++ Response 400
+
+## Data Querying [/data/query]
+
+### Query Raw Events [POST /events]
+
++ Response 200 (application/json)
+
+### Query Latest Events [POST /events/latest]
+
++ Response 200 (application/json)
+
+### Query Statistics [POST /stats]
+
++ Response 200 (application/json)
+
+## Data Streaming [/data/streams/{streamId}]
+
+### Server-Sent-Events [GET]
+
++ Response 200 (application/json)
+
+## Data Export [/data/exports/{exportId}]
+
+### Download Batch [GET]
+
++ Response 200 (application/json)
+
+# Data Structures
+
+## GraphQLRequest (object)
+
++ query (string)
++ operationName (string)
++ variables (object)

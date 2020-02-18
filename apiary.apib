@@ -1,0 +1,425 @@
+FORMAT: 1A
+HOST: https://obelisk.ilabt.imec.be/api
+
+# Obelisk
+Welcome to the Developer Documentation for the Obelisk Platform.
+
+The following Reference material details how to authenticate, how discover datasets and how to interact with the data (Querying, Streaming, Adding new data).
+
+# Glossary
+| Term          | Description                                                                                                                                                                                                                                                                                                                                                                                        |
+|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Dataset**   | A Dataset is the primary unit of how data is organized in Obelisk. It represents a coherent collection of data for a specific domain, project or site.                                                                                                                                                                                                                                             |
+| **Metric**    | A Metric represents a specific type of data. It is defined using a name and a type suffix. For example `humidity.rh::number` defines relative humidity measurements with a numerical value. Each Dataset can define its own unique set of Metrics (i.e. DatasetA and DatasetB can both define a Metric `power::number` but this does not necessarily mean they are referring to the same concept). |
+| **Event**     | An Event represents a single data point for a Metric (e.g. a sensor measurement), having a timestamp, a value and a set of meta-data attributes (e.g. a location).                                                                                                                                                                                                                                 |
+| **Thing**     | When publishing an Event to a Metric for a Dataset, an optional source Thing can be specified (as a user-defined ID). Things can be listed for a Dataset and additional meta-data can be attached to it. Use Things to help organizing your data!                                                                                                                                                  |
+| **Producer**  | A Producer uniquely defines the origin of a single Event.                                                                                                                                                                                                                                                                                                                                          |
+| **Geohash**   | A Geohash is a convenient way of expressing a location (anywhere in the world) using a short alphanumeric string, with greater precision obtained with longer strings.                                                                                                                                                                                                                             |
+| **Data range**| A data range defines the subject of a Query, Stream or Export, by specifying the Datasets and Metrics that should be taken into account.                                                                                                                                                                                                                                                           |
+
+# Group Auth API
+
+## Authenticating [/auth]
+
+### Getting a Token [POST]
+
++ Response 200 (application/json)
+
+# Group Catalog API
+This API allows you to interact with Obelisk as a Data Catalog. 
+Most clients will mainly be using the Catalog to discover which Datasets are available and 
+which Metrics and Sources (e.g. sensor devices) they provide. The resulting information can then be used to query the Data API.
+
+## GraphQL [/catalog/graphql]
+Instead of exposing the Catalog API as a traditional set of REST endpoints, we opted for a [GraphQL](https://graphql.org) based solution.
+
+Our Catalog Data Model contains a lot of relations between types and the expressive GraphQL Query mechanism facilitates in getting exactly 
+the information you need, with a minimal amount of requests needed. 
+
+The following paragraph gives some examples of useful queries. The full documentation can be found [here](http://obelisk.ilabt.imec.be/graphiql/).
+
+### Example GraphQL Queries
+#### Discover which Datasets you have access to
+There is a top-level `me` field, which refers to the authenticated User. One of the User's attributes allows you to access the Datasets the User is a member of.
+
+```
+me {
+  datasets {
+    items {
+      id
+      name
+    }
+  }
+}
+```
+
+#### Discover which Metrics are available for a Dataset
+You can get meta-data information for a specific Dataset, which can be useful to discover what Metrics can be queried using the Data API.
+
+```
+dataset(id: "1582038755100") {
+    metrics {
+        items {
+            id
+            properties
+        }
+        cursor
+    }
+}
+```
+
+**Note on paging**: A lot of fields return a Paged collection (to prevent the service from returning large results). 
+By also returning the `cursor` field, you can check if a next page is available (cursor != null) and use it to retrieve the next page by supplying the cursor as a parameter.
+
+#### Create a stream for a Dataset
+The GraphQL API is not limited to retrieving information, but can also be used to perform certain actions, such as requesting the creation of a new stream. This is done using a Mutation:
+
+```
+mutation {
+  createStream(input {
+    dataRange {
+      datasets: ["1582038755100", "1582038762702"]
+      metrics: ["airquality.no2::number"]
+    }
+  }) {
+    responseCode
+    message
+  }
+}
+```
+
+### GraphQL Endpoint
+GraphQL exposes a single endpoint that you can use to execute GraphQL queries (or mutations):
+
+### Executing a GraphQL Query [POST]
+
++ Request (application/json)
+    + Attributes (GraphQLRequest)
++ Response 200 (application/json)
+
+# Group Data API
+Once a client knows the Datasets it will interact with (thanks to the Catalog API), it can call the HTTP Operations of the Data API 
+for inserting or retrieving data.
+
+## Error Handling
+When successful, the HTTP Operations below will return a 200 or 204 Status Code. 
+If the Status Code is in the 4xx or 5xx range, something went wrong. 
+We will also return a standardized error Response Body to help you handling errors in your application code. For example:
+
+```json
+{
+  "error" : {
+    "status" : 404,
+    "message" : "A Dataset with the specified ID could not be found!"
+  }
+}
+```
+
+Common error Status Codes are:
+- 400 `Bad Request` - the request could not be understood or was missing required parameters.
+- 401 `Unauthorized` - authentication failed or user doesn't have permissions for requested operation.
+- 403 `Forbidden` - access denied.
+- 404 `Not Found` - a requested resource was not found.
+- 429 `Too Many Requests` - the rate limiter cancelled the requests. Try again later.
+- 500 `Internal Server Error` - an unexpected error occurred. Contact the administrator if this keeps happening.
+
+## Ingesting Data [/data/ingest/{datasetId}?{timestampPrecision}]
+With the appropiate permissions, clients can ingest data in the form of Metric Events for a specific Dataset.
+
++ Parameters
+    + datasetId (string) - The ID of the dataset to upload the events to.
+    + timestampPrecision: milliseconds, seconds, microseconds (enum, optional) - Determines how the UTC timestamps for the Metric Events should be interpreted. Defaults to milliseconds.
+
+### Uploading Events [POST]
+Metrics Events are uploaded as a JSON array of objects representing the individual events.
+
++ Request (application/json)
+    + Headers
+    
+            Authorization: Bearer Token
+            
+    + Attributes (IngestBatch)
+
++ Response 204
+
+## Querying Data [/data/query]
+With the appropiate permissions, clients can query data over a range of Datasets. There are three different query modes:
+
+### Getting Raw Events [POST /data/query/events]
+Retrieve Metric Event objects in the form they were ingested into a Dataset. Various Metrics of various Datasets can be combined into a single resultset.
+
++ Request (application/json)
+    + Attributes (EventsQuery)
+
++ Response 200 (application/json)
+    + Attributes (EventsQueryResult)
+
+### Getting Latest Raw Events [POST /data/query/events/latest]
+Allows retrieving the latest value for each Metric that matches the query parameters. Useful for getting the last known state of a specific context.
+
++ Request (application/json)
+    + Attributes (EventsQuery)
+
++ Response 200 (application/json)
+    + Attributes (EventsQueryResult)
+
+### Getting Aggregate Data [POST /data/query/events/stats]
+Calculate aggregate data (e.g. minimum value, count) over a specific Data Range. Aggregates can be calculated across Metric and Dataset boundaries, as long as the type suffix is the same for all Metrics in the Data range.
+
++ Request (application/json)
+    + Attributes (StatsQuery)
+
++ Response 200 (application/json)
+    + Attributes (StatsQueryResult)
+
+## Streaming Data [/data/streams/{streamId}]
+Clients can request new Data Streams using the Catalog API (or via Obelisk Web). Once a Data Stream has been successfully created, the client can open a streaming session using the following endpoint:
+
+### Opening a Stream [GET]
+Get a continuous stream of Metric Events matching the original Data Stream parameters in the form of [Server-Sent-Events (SSE)](https://html.spec.whatwg.org/multipage/server-sent-events.html#server-sent-events).
+
++ Parameters
+    + streamId (string) - The ID of the stream to open.
+
++ Request
+    + Headers
+
+            Accept: text/event-stream
+
++ Response 200 (text/event-stream)
+    + Body
+    
+            data: {//TODO example of streamed Metric Event}
+            
+            data: {//TODO example of streamed Metric Event}
+            
+            data: {//TODO example of streamed Metric Event}
+            
+            data: {//TODO example of streamed Metric Event}
+
+## Exporting Data [/data/exports/{exportId}]
+Clients can request large batches of raw Metric Events to be exported using the Catalog API (or via Obelisk Web). 
+A successful export will result in a compressed CSV file that can be downloaded using the following endpoint:
+
+### Downloading an Export [GET]
+
+
++ Parameters
+    + exportId (string) - The ID of the export to download.
+
++ Response 200 (application/zip)
+
+# Data Structures
+
+## EventsQuery (object)
+
++ dataRange (DataRange, required)
++ timestampPrecision (TimestampPrecision, optional) - _(Optional)_ Defines the timestamp precision for the returned results. Defaults to milliseconds.
++ fields (array[EventField], fixed-type, optional) - _(Optional)_ List of fields to return in the result set. Defaults to [metric, source, value]
++ from (number, optional) - _(Optional)_ Limit output to events after this UTC millisecond timestamp.
++ to (number, optional) - _(Optional)_ Limit output to events before this UTC millisecond timestamp.
++ orderByTime: asc, desc (enum, optional) - _(Optional)_ Define the temporal ordering of the events. Defaults to ascending.
++ filter (FilterExpression, optional)
++ limit (number, optional) - _(Optional)_ Limit output to a maximum number of events. Also determines the page size. Defaults to 2500.
++ cursor (string, optional) - _(Optional)_ Specifies the next cursor, used when paging through large result sets.
+
+## EventsQueryResult (object)
++ items (array[MetricEvent], fixed-type) - (A part of) the requested resultset.
++ cursor (string, optional) - If the resultset is larger than the requested or maximum page size, a String cursor is returned that can be used to fetch the next result.
+
+## MetricEvent (object)
++ timestamp (number) - UTC timestamp of the Event (with a precision determined by the Query, default: milliseconds).
++ dataset (string, optional) - ID of the Dataset the Event belongs to.
++ metric (string, optional) - ID of the Metric the Event belongs to.
++ value (MetricValue, optional)
++ producer (object, optional) - The Producer of the Event
+    - userId (string)
+    - clientId (string)
++ source (string, optional) - The ID of the Thing that is the source of the Event (Producer-specified).
++ tags (array[string], optional) - A set of Producer-specified tags for the Event.
++ location (object, optional) - The location where the Event was recorded.
+    - lat (number)
+    - lng (number)
++ geohash (string, optional) - The location as a Geohash
++ elevation (number, optional) - The height in meters (relative to ground-level at the location)
++ tsReceived (number, optional) - The time at which Obelisk received the Event (UTC milliseconds)
+
+## MetricValue (*)
+Value of the Event, can be any JSON type (number, string, bool, array, object).
+
+## EventField (enum)
++ dataset
++ metric
++ producer
++ source
++ value
++ tags
++ location
++ geohash
++ elevation
++ tsReceived
+
+## StatsQuery (object)
+
++ dataRange (DataRange, required)
++ timestampPrecision (TimestampPrecision, optional) - Defines the timestamp precision for the returned results. Defaults to milliseconds.
++ fields (array[StatsField], optional) - List of fields to return in the result set. Defaults to [metric, source, value]
++ from (number, optional) - Limit output to events after this UTC millisecond timestamp.
++ to (number, optional) - Limit output to events before this UTC millisecond timestamp.
++ orderByTime: asc, desc (enum, optional) - Define the temporal ordering of the events. Defaults to ascending.
++ filter (FilterExpression, optional)
++ groupBy (GroupBy, optional) - Group the results by time, metadata field or location.
++ limit (number, optional) - Limit output to a maximum number of events. Also determines the page size. Defaults to 2500.
++ cursor (string, optional) - Specifies the next cursor, used when paging through large result sets.
+
+## TimestampPrecision (enum)
++ seconds
++ milliseconds
++ microseconds
+
+## StatsQueryResult (object)
++ items (array[MetricStat]) - (A part of) the requested resultset.
++ cursor (string, optional) - If the resultset is larger than the requested or maximum page size, a String cursor is returned that can be used to fetch the next result.
+
+## MetricStat (object)
++ timestamp (number) - UTC timestamp of the Event (with a precision determined by the Query, default: milliseconds).
++ dataset (string) - ID of the Dataset the Event belongs to.
++ metric (string) - ID of the Metric the Event belongs to.
++ producer - The Producer of the Event
+    - userId (string)
+    - clientId (string)
++ source (string) - The ID of the Thing that is the source of the Event (Producer-specified).
++ geohash (string) - The location as a Geohash (is available here, because it can be used to group on).
++ min (number) - The minimum value for all Events of a numerical Metric type that match the query parameters.
++ max (number) - The maximum value for all Events of a numerical Metric type that match the query parameters.
++ mean (number)- The mean value for all Events of a numerical Metric type that match the query parameters.
++ stddev (number)- The standard deviation for all Events of a numerical Metric type that match the query parameters.
++ count (number) - The number of Events of a numerical Metric type that match the query parameters.
+
+## StatsField (enum) 
++ dataset
++ metric
++ producer
++ source
++ geohash
++ min
++ max
++ mean
++ stddev
++ count
+
+## FilterExpression (object)
+_(Optional)_ Allows filtering Query results using a JSON filter expression model. For example:
+
+**Property equality**
+```json
+{
+  "source" : {
+    "_eq" : "lora.9dd7c139-c5c3"
+  }
+}
+```
+
+**Logical AND with field test**
+```json
+{
+  "_and" : [
+    {
+      "source" : {
+        "_eq" : "lora.9dd7c139-c5c3"
+      }
+    },
+    {
+      "_exists" : "location"
+    }
+  ]
+}
+```
+
+### Properties
+- One Of
+    - _and (array[FilterExpression]) - Logical AND (all child expressions match)
+    - _or (array[FilterExpression]) - Logical OR (one of the child expressions matches)
+    - _not (FilterExpression) - Logical NOT (the child expression does not match)
+    - _exists (string) - True for MetricEvents that have the specified field
+    - _withTag (string) - True for MetricEvents that have the specified tag
+    - *fieldName (string)*
+        - One Of
+            - _eq (*) - Check if the field is equal to the specified value
+            - _neq (*) - Check if the field is not equal to the specified value
+            - _gt (*) - Check if the field is greater than the specified value
+            - _gte (*) - Check if the field is greater than or equal to the specified value
+            - _lt (*) - Check if the field is less than the specified value
+            - _lte (*) - Check if the field is less than or equal to the specified value
+            - _in (array) - Check if the field value is in the specified array
+            - _startsWith (string) - Check if the string value of the field starts with the specified prefix
+            - _regex (string) - Check if the field matches the specified regular expression
+
+## GroupBy (object)
++ time (object, optional) - Allows grouping by time (e.g. by hour)
+    - interval: 1 (number)
+    - intervalUnit: hour (IntervalUnit, optional)
+    - offset (number, optional)
+    - offsetUnit (IntervalUnit, optional)
++ fields (array[GroupByField], fixed-type, optional) - Allows grouping by a specific set of meta-data fields.
++ geohashPrecision (number, optional) - Allows grouping by geohashes of a certain precision (between 4 and 8, default 4).
+
+## GroupByField (enum)
++ dataset
++ metric
++ producer
++ source
+
+## IntervalUnit (enum)
++ seconds
++ minutes
++ hours
++ days
+
+## DataRange (object)
+Specifies the Datasets and Metrics that should be taken into account. The Dataset IDs must be specified, but Metric IDs are optional. Some considerations:
+
+**One type per range**
+
+You cannot combine Metrics of different types in a single DataRange. E.g. when including `airquality.no2::number`, all Metrics in the range must be of type `::number`.
+
+**Type Wildcard**
+
+When omitting the metric IDs, the range will default to including all Metrics of type `::number` for the specified Datasets. 
+You can customize this behavior by specifying a wildcard as metric ID: `*::bool`, `*::string` or `*::json`.
+
+**Extracting JSON attributes**
+
+You can extract individual fields from Metrics of type `::json`, which allows you to combine them as a derived Metric in combination with other Metrics of the same type.
+For example:
+
+```json
+{
+  "datasets" : ["1582043401098"],
+  "metrics" : ["airquality.no2::number", "AirqualityObserved::json/raw.no2::number"]
+}
+```
+
+When querying raw events using this DataRange, the resultset will contain values for the primitive Metric `airquality.no2::number` along with values that were extracted from the Metric `AirqualityObserved::json` using the specified json path (`raw.no2`). 
+
+### Properties
++ datasets (array[string]) - The IDs of the Datasets the Query should take into account.
++ metrics (array[string], optional) - The IDs of the Metrics the Query should take into account.
+
+## IngestBatch (array[IngestMetricEvent], fixed-type)
+    
+## IngestMetricEvent (object)
++ timestamp (number, optional) - _(Optional)_ UTC Timestamp for the Event (with a precision determined by the Ingest request, default: milliseconds).
++ metric (string) - The ID of the Metric the Event belongs to.
++ value (MetricValue)
++ source (string, optional) - _(Optional)_ The ID of the Thing that is the source of the Event (Producer-specified).
++ tags (array[string], optional) - _(Optional)_ A set of Producer-specified tags for the Event
++ location (object, optional) - _(Optional)_ The location the Event was recorded at.
+    - lat (number)
+    - lng (number)
++ elevation (number, optional) - _(Optional)_ The height in meters (relative to ground-level at the location)
+
+## GraphQLRequest (object)
++ query (string) - The GraphQL Query (or Mutation) to execute.
++ operationName (string, optional) - An optional operationName, only required if multiple operations are present in the query.
++ variables (object, optional) - Allows setting the value for variables used in the query.

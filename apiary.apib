@@ -123,12 +123,13 @@ Common error Status Codes are:
 - 429 `Too Many Requests` - the rate limiter cancelled the requests. Try again later.
 - 500 `Internal Server Error` - an unexpected error occurred. Contact the administrator if this keeps happening.
 
-## Ingesting Data [/data/ingest/{datasetId}?{timestampPrecision}]
+## Ingesting Data [/data/ingest/{datasetId}?{timestampPrecision}{mode}]
 With the appropiate permissions, clients can ingest data in the form of Metric Events for a specific Dataset.
 
 + Parameters
     + datasetId (string) - The ID of the dataset to upload the events to.
     + timestampPrecision: milliseconds, seconds, microseconds (enum, optional) - Determines how the UTC timestamps for the Metric Events should be interpreted. Defaults to milliseconds.
+    + mode: default, stream_only (enum, optional) - Determines how the ingest batch is processed. Next to the default dataflow, we also provide a 'stream_only' option that does not store the data. This can be useful for high-frequency series of volatile data.
 
 ### Uploading Events [POST]
 Metrics Events are uploaded as a JSON array of objects representing the individual events.

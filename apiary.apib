@@ -98,8 +98,11 @@ GraphQL exposes a single endpoint that you can use to execute GraphQL queries (o
 + Response 200 (application/json)
 
 ## Dataset Resources [/catalog/resources/{datasetId}]
-Sometimes it can be useful to attach resources such as a documents or images to a Dataset. 
-The following set of endpoints allow uploading, retrieving and deleting Dataset resources.
+Sometimes it can be useful to attach resources such as a documents or images to a Dataset. The Obelisk Catalog relies on this API for two special cases:
+* Dataset managers can upload a README.MD file that contains documentation or an extended description for the Dataset in markdown format. If present, it will be displayed on the Dataset Overview page.
+* Dataset managers can select Resources that are images to be used as thumbnail or background image for the Dataset in the Catalog or Dataset Overview pages.
+
+The following set of endpoints allow uploading, retrieving and deleting Dataset resources:
 
 + Parameters
     + datasetId - The ID of the Dataset the Resources are associated with.

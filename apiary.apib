@@ -97,6 +97,39 @@ GraphQL exposes a single endpoint that you can use to execute GraphQL queries (o
     + Attributes (GraphQLRequest)
 + Response 200 (application/json)
 
+## Dataset Resources [/catalog/resources/{datasetId}]
+Sometimes it can be useful to attach resources such as a documents or images to a Dataset. 
+The following set of endpoints allow uploading, retrieving and deleting Dataset resources.
+
++ Parameters
+    + datasetId - The ID of the Dataset the Resources are associated with.
+
+### Upload a Resource [POST]
+Upload a file as a Resource for the specified Dataset. Only Users or Clients with `MANAGE` permissions for a Dataset can call this operation.
+
++ Request (multipart/form-data)
++ Response 201
+
+### List Resources [GET]
+List the Resources (JSON array of URIs) that are associated with a specific Dataset. For _published_ Datasets, any user can call this endpoint, otherwise access is restricted to Dataset members.
+
++ Response 200 (application/json)
+    + Attributes(DatasetResourceList)
+
+### Download a Resource [GET /catalog/resources/{datasetId}/{resourceId}]
+Download a specific Resource. For _published_ Datasets, any user can call this endpoint, otherwise access is restricted to Dataset members.
+
++ Parameters
+    + resourceId (string) - The ID (filename) of the resource to download.
++ Response 200
+
+### Delete a Resource [DELETE /catalog/resources/{datasetId}/{resourceId}]
+Delete a specific Resource. Only Users or Clients with `MANAGE` permissions for a Dataset can call this operation.
+
++ Parameters
+    + resourceId (string) - The ID (filename) of the resource to download.
++ Response 204
+
 # Group Data API
 Once a client knows the Datasets it will interact with (thanks to the Catalog API), it can call the HTTP Operations of the Data API 
 for inserting or retrieving data.
@@ -424,3 +457,10 @@ When querying raw events using this DataRange, the resultset will contain values
 + query (string) - The GraphQL Query (or Mutation) to execute.
 + operationName (string, optional) - An optional operationName, only required if multiple operations are present in the query.
 + variables (object, optional) - Allows setting the value for variables used in the query.
+
+## DatasetResourceList (array[DatasetResource], fixed-type)
+
+## DatasetResource (object)
++ timestamp (number) - UTC Timestamp that indicates when the Resource was last updated.
++ url (string) - URL for accessing the Resource.
++ contentType - Content type (e.g. image/png) for the resource.

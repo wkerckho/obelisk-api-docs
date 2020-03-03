@@ -98,23 +98,31 @@ GraphQL exposes a single endpoint that you can use to execute GraphQL queries (o
 + Response 200 (application/json)
 
 ## Dataset Resources [/catalog/resources/{datasetId}]
-Sometimes it can be useful to attach resources such as documents or images to a Dataset. The Obelisk Catalog relies on this API for two special cases:
-* Dataset managers can upload a README.MD file that contains documentation or an extended description for the Dataset in markdown format. If present, it will be displayed on the Dataset Overview page.
-* Dataset managers can select Resources that are images to be used as thumbnail or background image for the Dataset in the Catalog or Dataset Overview pages.
+Sometimes it can be useful to attach resources such as documents or images to a Dataset. The Obelisk Catalog gives special meaning to Resources with the following ID (filename):
+* `thumbnail.png`: If present, this image file will be used to render a preview image for the Catalog Overview page in the Obelisk UI.
+* `banner.png`: If present, this image file will be used to render a header banner for the Dataset Details page in the Obelisk UI.
+* `README.MD`: If present, this [Markdown](https://www.markdownguide.org/) formatted text file will be used to render additional documentation for the Dataset Details page in the Obelisk UI.
 
 The following set of endpoints allow uploading, retrieving and deleting Dataset resources:
 
 + Parameters
-    + datasetId - The ID of the Dataset the Resources are associated with.
+    + datasetId: 1616caf8-dccf (string) - The ID of the Dataset the Resources are associated with.
 
-### Upload a Resource [POST]
+### Upload a Resource [POST /catalog/resources/{datasetId}?resourceType={resourceType}&overwrite={overwrite}]
 Upload a file as a Resource for the specified Dataset. Only Users or Clients with `MANAGE` permissions for a Dataset can call this operation.
 
++ Parameters
+    + resourceType: thumbnail (enum) - Indicates a specific resource type, e.g. if set to thumbnail, any uploaded PNG file will be stored as `thumbnail.png` so it can be used from the Obelisk UI. _Default value_: `other` (no special meaning).
+        - thumbnail
+        - banner
+        - readme
+        - other
+    + overwrite: false (boolean) - Indicates if the uploaded file should overwrite the existing content, if a Resource with the specified filename already exists. _Default value_: `false`
 + Request (multipart/form-data)
 + Response 201
 
 ### List Resources [GET]
-List the Resources (JSON array of URIs) that are associated with a specific Dataset. For _published_ Datasets, any user can call this endpoint, otherwise access is restricted to Dataset members.
+List the Resources that are associated with a specific Dataset. For _published_ Datasets, any user can call this endpoint, otherwise access is restricted to Dataset members.
 
 + Response 200 (application/json)
     + Attributes(DatasetResourceList)
@@ -123,14 +131,14 @@ List the Resources (JSON array of URIs) that are associated with a specific Data
 Download a specific Resource. For _published_ Datasets, any user can call this endpoint, otherwise access is restricted to Dataset members.
 
 + Parameters
-    + resourceId (string) - The ID (filename) of the resource to download.
+    + resourceId: README.MD (string) - The ID (filename) of the resource to download.
 + Response 200
 
 ### Delete a Resource [DELETE /catalog/resources/{datasetId}/{resourceId}]
 Delete a specific Resource. Only Users or Clients with `MANAGE` permissions for a Dataset can call this operation.
 
 + Parameters
-    + resourceId (string) - The ID (filename) of the resource to download.
+    + resourceId: SensorOverview1920.pdf (string) - The ID (filename) of the resource to delete.
 + Response 204
 
 # Group Data API
@@ -216,7 +224,7 @@ Clients can request new Data Streams using the Catalog API (or via Obelisk Web).
 Get a continuous stream of Metric Events matching the original Data Stream parameters in the form of [Server-Sent-Events (SSE)](https://html.spec.whatwg.org/multipage/server-sent-events.html#server-sent-events).
 
 + Parameters
-    + streamId (string) - The ID of the stream to open.
+    + streamId: 4a04-b994 (string) - The ID of the stream to open.
 
 + Request
     + Headers
@@ -226,13 +234,13 @@ Get a continuous stream of Metric Events matching the original Data Stream param
 + Response 200 (text/event-stream)
     + Body
     
-            data: {//TODO example of streamed Metric Event}
+            data: {"timestamp":1583246293374,"metric":"test::json","value":{"r":178,"g":64,"b":207}}
             
-            data: {//TODO example of streamed Metric Event}
+            data: {"timestamp":1583246297919,"metric":"test::number","value":0.47421719215489455}
             
-            data: {//TODO example of streamed Metric Event}
+            data: {"timestamp":1583246297920,"metric":"test::string","value":"07a432c1-ac44-476c-aafd-e6e53e4e5365"}
             
-            data: {//TODO example of streamed Metric Event}
+            data: {"timestamp":1583246297922,"metric":"test::json","value":{"r":201,"g":62,"b":87}}
 
 ## Exporting Data [/data/exports/{exportId}]
 Clients can request large batches of raw Metric Events to be exported using the Catalog API (or via Obelisk Web). 
@@ -242,7 +250,7 @@ A successful export will result in a compressed CSV file that can be downloaded 
 
 
 + Parameters
-    + exportId (string) - The ID of the export to download.
+    + exportId: f3fd1324940 (string) - The ID of the export to download.
 
 + Response 200 (application/zip)
 

@@ -1,5 +1,5 @@
 FORMAT: 1A
-HOST: https://obelisk.ilabt.imec.be/api
+HOST: https://obelisk.ilabt.imec.be/api/v3
 
 # Obelisk
 Welcome to the Developer Documentation for the Obelisk Platform.
@@ -142,7 +142,7 @@ Delete a specific Resource. Only Users or Clients with `MANAGE` permissions for 
 + Response 204
 
 # Group Data API
-Once a client knows the Datasets it will interact with (thanks to the Catalog API), it can call the HTTP Operations of the Data API 
+Once a client knows the Datasets that are available to interact with (thanks to the Catalog API), it can call the HTTP Operations of the Data API 
 for inserting or retrieving data.
 
 ## Error Handling
@@ -164,17 +164,26 @@ Common error Status Codes are:
 - 401 `Unauthorized` - authentication failed or user doesn't have permissions for requested operation.
 - 403 `Forbidden` - access denied.
 - 404 `Not Found` - a requested resource was not found.
-- 429 `Too Many Requests` - the rate limiter cancelled the requests. Try again later.
+- 429 `Too Many Requests` - the rate limiter cancelled the request. Try again later.
 - 500 `Internal Server Error` - an unexpected error occurred. Contact the administrator if this keeps happening.
 
-## Ingesting Data [/data/ingest/{datasetId}?{timestampPrecision}{mode}]
+## Ingesting Data [/data/ingest/{datasetId}{?timestampPrecision,mode}]
 With the appropiate permissions, clients can ingest data in the form of Metric Events for a specific Dataset.
 
 + Parameters
     + datasetId (string) - The ID of the dataset to upload the events to.
-    + timestampPrecision: milliseconds, seconds, microseconds (enum, optional) - Determines how the UTC timestamps for the Metric Events should be interpreted. Defaults to milliseconds.
-    + mode: default, stream_only (enum, optional) - Determines how the ingest batch is processed. Next to the default dataflow, we also provide a 'stream_only' option that does not store the data. This can be useful for high-frequency series of volatile data.
-
+    + timestampPrecision (enum[string], optional) - Determines how the UTC timestamps for the Metric Events should be interpreted.
+        + Default: milliseconds
+        + Members
+            + microseconds
+            + milliseconds
+            + seconds
+    + mode (enum[string], optional) - Determines how the ingest batch is processed. Should the input data be stored? Or be streamed to subscribed clients? Or both (default)?
+        + Default: default
+        + Members
+            + default
+            + stream_only
+            + store_only
 ### Uploading Events [POST]
 Metrics Events are uploaded as a JSON array of objects representing the individual events.
 
@@ -209,7 +218,7 @@ Allows retrieving the latest value for each Metric that matches the query parame
     + Attributes (EventsQueryResult)
 
 ### Getting Aggregate Data [POST /data/query/events/stats]
-Calculate aggregate data (e.g. minimum value, count) over a specific Data Range. Aggregates can be calculated across Metric and Dataset boundaries, as long as the type suffix is the same for all Metrics in the Data range.
+Calculate aggregate data (e.g. minimum value, count) over a specific Data Range. Aggregates can be calculated across Metric and Dataset boundaries, but are restricted to Metrics of type `::number` (including numerical Metrics derived from `::json`, e.g. `AirqualityObserved::json/temperature.value::number`).
 
 + Request (application/json)
     + Attributes (StatsQuery)
@@ -259,13 +268,19 @@ A successful export will result in a compressed CSV file that can be downloaded 
 ## EventsQuery (object)
 
 + dataRange (DataRange, required)
-+ timestampPrecision (TimestampPrecision, optional) - _(Optional)_ Defines the timestamp precision for the returned results. Defaults to milliseconds.
++ timestampPrecision (enum[string], optional) - _(Optional)_ Defines the timestamp precision for the returned results.
+    + Members
+        + microseconds
+        + milliseconds
+        + seconds
+    + Default: milliseconds
 + fields (array[EventField], fixed-type, optional) - _(Optional)_ List of fields to return in the result set. Defaults to [metric, source, value]
-+ from (number, optional) - _(Optional)_ Limit output to events after this UTC millisecond timestamp.
-+ to (number, optional) - _(Optional)_ Limit output to events before this UTC millisecond timestamp.
-+ orderByTime: asc, desc (enum, optional) - _(Optional)_ Define the temporal ordering of the events. Defaults to ascending.
-+ filter (FilterExpression, optional)
++ from (number, optional) - _(Optional)_ Limit output to events after (and including) this UTC millisecond timestamp.
++ to (number, optional) - _(Optional)_ Limit output to events before (and excluding) this UTC millisecond timestamp.
++ orderBy (OrderBy, optional) - _(Optional)_ Specifies the ordering of the output, defaults to ascending by timestamp.
++ filter (FilterExpression, optional) - _(Optional)_ Limit output to events matching the specified Filter expression.
 + limit (number, optional) - _(Optional)_ Limit output to a maximum number of events. Also determines the page size. Defaults to 2500.
++ limitBy (LimitBy, optional) - _(Optional)_ Limit the combination of a specific set of Index fields to a specified maximum number.
 + cursor (string, optional) - _(Optional)_ Specifies the next cursor, used when paging through large result sets.
 
 ## EventsQueryResult (object)
@@ -276,51 +291,75 @@ A successful export will result in a compressed CSV file that can be downloaded 
 + timestamp (number) - UTC timestamp of the Event (with a precision determined by the Query, default: milliseconds).
 + dataset (string, optional) - ID of the Dataset the Event belongs to.
 + metric (string, optional) - ID of the Metric the Event belongs to.
-+ value (MetricValue, optional)
++ value (MetricValue, optional) - The raw value that was recorded for the Event.
 + producer (object, optional) - The Producer of the Event
     - userId (string)
     - clientId (string)
 + source (string, optional) - The ID of the Thing that is the source of the Event (Producer-specified).
 + tags (array[string], optional) - A set of Producer-specified tags for the Event.
-+ location (object, optional) - The location where the Event was recorded.
-    - lat (number)
-    - lng (number)
++ location (Location, optional) - The location where the Event was recorded.
 + geohash (string, optional) - The location as a Geohash
 + elevation (number, optional) - The height in meters (relative to ground-level at the location)
 + tsReceived (number, optional) - The time at which Obelisk received the Event (UTC milliseconds)
 
+## Location (object)
++ lat (number) - The latitude of the Location.
++ lng (number) - The longitude of the Location.
+
 ## MetricValue (*)
 Value of the Event, can be any JSON type (number, string, bool, array, object).
 
+## IndexField (enum)
++ timestamp - UTC timestamp of the Event (with a precision determined by the Query, default: milliseconds).
++ dataset - ID of the Dataset the Event belongs to.
++ metric - ID of the Metric the Event belongs to.
++ producer - The Producer of the Event
++ source - The ID of the Thing that is the source of the Event (Producer-specified).
++ geohash - The location as a Geohash
+
 ## EventField (enum)
-+ dataset
-+ metric
-+ producer
-+ source
-+ value
-+ tags
-+ location
-+ geohash
-+ elevation
-+ tsReceived
++ timestamp - UTC timestamp of the Event (with a precision determined by the Query, default: milliseconds).
++ dataset - ID of the Dataset the Event belongs to.
++ metric - ID of the Metric the Event belongs to.
++ producer - The Producer of the Event
++ source - The ID of the Thing that is the source of the Event (Producer-specified).
++ value - The raw value that was recorded for the Event.
++ tags - A set of Producer-specified tags for the Event.
++ location - The location where the Event was recorded.
++ geohash - The location as a Geohash
++ elevation - The height in meters (relative to ground-level at the location)
++ tsReceived - The time at which Obelisk received the Event (UTC milliseconds)
 
 ## StatsQuery (object)
 
 + dataRange (DataRange, required)
-+ timestampPrecision (TimestampPrecision, optional) - Defines the timestamp precision for the returned results. Defaults to milliseconds.
-+ fields (array[StatsField], optional) - List of fields to return in the result set. Defaults to [metric, source, value]
-+ from (number, optional) - Limit output to events after this UTC millisecond timestamp.
-+ to (number, optional) - Limit output to events before this UTC millisecond timestamp.
-+ orderByTime: asc, desc (enum, optional) - Define the temporal ordering of the events. Defaults to ascending.
-+ filter (FilterExpression, optional)
++ timestampPrecision (enum[string], optional) - _(Optional)_ Defines the timestamp precision for the returned results.
+    + Members
+        + microseconds
+        + milliseconds
+        + seconds
+    + Default: milliseconds
++ fields (array[StatsField], optional) - List of fields to return in the result set. Defaults to [mean, count]
+    + Default: mean, count
++ from (number, optional) - Limit aggregate to events after (and including) this UTC millisecond timestamp.
++ to (number, optional) - Limit aggregate to events before (and excluding) this UTC millisecond timestamp.
++ orderBy (OrderBy, optional) - _(Optional)_ Specifies the ordering of the output, defaults to ascending by timestamp.
++ filter (FilterExpression, optional) - _(Optional)_ Limit aggregate to events matching the specified Filter expression.
 + groupBy (GroupBy, optional) - Group the results by time, metadata field or location.
-+ limit (number, optional) - Limit output to a maximum number of events. Also determines the page size. Defaults to 2500.
++ limit (number, optional) - Limit output to a maximum number of events. Also determines the page size. Defaults to 60.
 + cursor (string, optional) - Specifies the next cursor, used when paging through large result sets.
 
-## TimestampPrecision (enum)
-+ seconds
-+ milliseconds
-+ microseconds
+## OrderBy (object)
++ fields (array[IndexField]) - List of fields to order by.
++ ordering (enum[string], optional) - Sort order.
+    + Members
+        + asc
+        + desc
+    + Default: asc
+
+## LimitBy (object)
++ fields (array[IndexField]) - List of fields to limit by.
++ limit (number) - Limit results for the specified fields combination.
 
 ## StatsQueryResult (object)
 + items (array[MetricStat]) - (A part of) the requested resultset.
@@ -352,6 +391,7 @@ Value of the Event, can be any JSON type (number, string, bool, array, object).
 + mean
 + stddev
 + count
++ sum
 
 ## FilterExpression (object)
 _(Optional)_ Allows filtering Query results using a JSON filter expression model. For example:
@@ -388,6 +428,11 @@ _(Optional)_ Allows filtering Query results using a JSON filter expression model
     - _not (FilterExpression) - Logical NOT (the child expression does not match)
     - _exists (string) - True for MetricEvents that have the specified field
     - _withTag (string) - True for MetricEvents that have the specified tag
+    - _withAnyTag (array[string]) - True for MetricEvents that have at least one of the listed tags.
+    - _locationInCircle (object) - True for MetricEvents with a Location inside of the circle specified by the provided center coordinate and radius.
+        + center (Location) - Center of the circle as a Location (latitude, longitude pair).
+        + radius (number) - The radius of the circle (in meters).
+    - _locationInPolygon (array[Coordinate2D]) - True for MetricEvents with a Location inside of the polygon specified by the provided vertices list. The vertices (minimum 3) should be specified in a clockwise or counterclockwise order, with each vertice representing a coordinate.
     - *fieldName (string)*
         - One Of
             - _eq (*) - Check if the field is equal to the specified value
@@ -399,21 +444,18 @@ _(Optional)_ Allows filtering Query results using a JSON filter expression model
             - _in (array) - Check if the field value is in the specified array
             - _startsWith (string) - Check if the string value of the field starts with the specified prefix
             - _regex (string) - Check if the field matches the specified regular expression
+            - _options (string) - Use in conjunction with regex to specify regex options. Currently we only support `i` to signal that the regex should ignore case.
+
+## Coordinate2D (array[number])
 
 ## GroupBy (object)
-+ time (object, optional) - Allows grouping by time (e.g. by hour)
-    - interval: 1 (number)
-    - intervalUnit: hour (IntervalUnit, optional)
-    - offset (number, optional)
-    - offsetUnit (IntervalUnit, optional)
-+ fields (array[GroupByField], fixed-type, optional) - Allows grouping by a specific set of meta-data fields.
-+ geohashPrecision (number, optional) - Allows grouping by geohashes of a certain precision (between 4 and 8, default 4).
-
-## GroupByField (enum)
-+ dataset
-+ metric
-+ producer
-+ source
++ fields (array[IndexField], fixed-type, optional) - Allows grouping by a specific set of meta-data fields.
++ time (object, optional) - When grouping by time, allows specifying the time interval to group by.
+    - interval: 1 (number) - Length of the time interval.
+    - intervalUnit: hour (IntervalUnit, optional) - Unit of the time interval.
+    - offset (number, optional) - Length of the offset to apply (e.g. useful to correct timezone differences when requesting daily aggregates).
+    - offsetUnit (IntervalUnit, optional) - Unit of the offset to apply.
++ geohashPrecision (number, optional) - When grouping by geohash, allows grouping by geohashes of a certain precision (between 4 and 8, default 4).
 
 ## IntervalUnit (enum)
 + seconds
@@ -422,16 +464,11 @@ _(Optional)_ Allows filtering Query results using a JSON filter expression model
 + days
 
 ## DataRange (object)
-Specifies the Datasets and Metrics that should be taken into account. The Dataset IDs must be specified, but Metric IDs are optional. Some considerations:
-
-**One type per range**
-
-You cannot combine Metrics of different types in a single DataRange. E.g. when including `airquality.no2::number`, all Metrics in the range must be of type `::number`.
+Specifies the Datasets and Metrics that should be taken into account. The Dataset IDs must be specified, but Metric IDs are optional.
 
 **Type Wildcard**
 
-When omitting the metric IDs, the range will default to including all Metrics of type `::number` for the specified Datasets. 
-You can customize this behavior by specifying a wildcard as metric ID: `*::bool`, `*::string` or `*::json`.
+The `metrics` list supports wildcards, you can e.g. request all metrics of type number to be returned using `*::number`.
 
 **Extracting JSON attributes**
 
@@ -441,22 +478,23 @@ For example:
 ```json
 {
   "datasets" : ["1582043401098"],
-  "metrics" : ["airquality.no2::number", "AirqualityObserved::json/raw.no2::number"]
+  "metrics" : ["airquality.no2::number", "AirqualityObserved::json/NO.value::number"]
 }
 ```
 
-When querying raw events using this DataRange, the resultset will contain values for the primitive Metric `airquality.no2::number` along with values that were extracted from the Metric `AirqualityObserved::json` using the specified json path (`raw.no2`). 
+When querying raw events using this DataRange, the resultset will contain values for the primitive Metric `airquality.no2::number` along with values that were extracted from the Metric `AirqualityObserved::json` using the specified json path (`NO.value`). 
 
 ### Properties
 + datasets (array[string]) - The IDs of the Datasets the Query should take into account.
 + metrics (array[string], optional) - The IDs of the Metrics the Query should take into account.
+    + Default: "*::number", "::number[]", "::bool", "::string", "::json"
 
 ## IngestBatch (array[IngestMetricEvent], fixed-type)
     
 ## IngestMetricEvent (object)
-+ timestamp (number, optional) - _(Optional)_ UTC Timestamp for the Event (with a precision determined by the Ingest request, default: milliseconds).
-+ metric (string) - The ID of the Metric the Event belongs to.
-+ value (MetricValue)
++ timestamp (number, optional) - _(Optional)_ UTC Timestamp for the Event (with a precision determined by the Ingest request), defaults to 'now'.
++ metric (string) - The ID of the Metric the Event belongs to, i.e. the name of the timeseries. This can be any string, but should end in one of the supported type suffixes: `::number`, `::number[]`, `::bool`, `::string`, `::json`.
++ value (MetricValue) - The value for the event. The type of the value must match the type of the timeseries indicated by the metric type suffix.
 + source (string, optional) - _(Optional)_ The ID of the Thing that is the source of the Event (Producer-specified).
 + tags (array[string], optional) - _(Optional)_ A set of Producer-specified tags for the Event
 + location (object, optional) - _(Optional)_ The location the Event was recorded at.

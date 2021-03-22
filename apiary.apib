@@ -452,7 +452,7 @@ _(Optional)_ Allows filtering Query results using a JSON filter expression model
 + fields (array[IndexField], fixed-type, optional) - Allows grouping by a specific set of meta-data fields.
 + time (object, optional) - When grouping by time, allows specifying the time interval to group by.
     - interval: 1 (number) - Length of the time interval.
-    - intervalUnit: hour (IntervalUnit, optional) - Unit of the time interval.
+    - intervalUnit: hours (IntervalUnit, optional) - Unit of the time interval.
     - offset (number, optional) - Length of the offset to apply (e.g. useful to correct timezone differences when requesting daily aggregates).
     - offsetUnit (IntervalUnit, optional) - Unit of the offset to apply.
 + geohashPrecision (number, optional) - When grouping by geohash, allows grouping by geohashes of a certain precision (between 4 and 8, default 4).
@@ -478,11 +478,11 @@ For example:
 ```json
 {
   "datasets" : ["1582043401098"],
-  "metrics" : ["airquality.no2::number", "AirqualityObserved::json/NO.value::number"]
+  "metrics" : ["airquality.no2::number", "AirqualityObserved::json/NO->value::number"]
 }
 ```
 
-When querying raw events using this DataRange, the resultset will contain values for the primitive Metric `airquality.no2::number` along with values that were extracted from the Metric `AirqualityObserved::json` using the specified json path (`NO.value`). 
+When querying raw events using this DataRange, the resultset will contain values for the primitive Metric `airquality.no2::number` along with values that were extracted from the Metric `AirqualityObserved::json` using the specified json path (`NO->value`). 
 
 ### Properties
 + datasets (array[string]) - The IDs of the Datasets the Query should take into account.

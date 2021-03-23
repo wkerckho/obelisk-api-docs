@@ -1,5 +1,5 @@
 FORMAT: 1A
-HOST: https://obelisk.ilabt.imec.be/api/v3
+HOST: https://dev.obelisk.ilabt.imec.be/api/v3
 
 # Obelisk
 Welcome to the Developer Documentation for the Obelisk Platform.
@@ -19,6 +19,36 @@ The following Reference material details how to authenticate, how discover datas
 
 # Group Auth API
 This API allows you to authenticate yourself or your client application with the Obelisk Auth backend. Before you can use most of the APIs below, you will need to be authenticated first. An Access Token will be the proof that you are authenticated and authorized to execute the protected APIs.
+
+## JWKS - Json Web Key Set [/auth/jwks]
+Obelisk ID Tokens are asymmetrically signed as a JWT (JSON Web Token). If desired, the integrity of an ID Token can be verified with the keys hosted at the JWKS endpoint.
+
+### Get the Obelisk JWK set [GET]
+
++ Response 200 (applciation/json)
+
+        {
+            "keys": [
+                {
+                    "kty": "RSA",
+                    "kid": "dbb90de0-66d9-473e-aeed-657e3f8ffa14",
+                    "use": "sig",
+                    "alg": "RS256",
+                    "n": "xgS2HRQ8DV0ICjhX8JSE-QOWw3OmqUg4ppb--klTD5ejPYVRwEkbsca8EyWy91Wgn_SaKXqAHaXmI9N8m6L8GYkmHaWbWXzsgTC0ArPIsC-FFQd4WJNyj1y5BVK4JWGFNyabJAKjyFsYygDJmULQGaRB0jN6gwt6PZfmnNvOTYPfuvEXNtdgIKk4246wd9keBarv0oEYdR99j33NPYM5xk9qJTq6NRbB0fgKzt94xf9sLOIX0-p4NuvuX0hhqU4GTElEw_IKz_5-3YfPkkuMsPpTjgZcqAdydbfE6J5ZTbndHQLvPCKy3iuR7xPeliDuWd2ogLgM00aAp-YnjP98Uw",
+                    "e": "AQAB"
+                },
+                {
+                    "kty": "RSA",
+                    "kid": "f12ea355-dafc-4f72-a39c-39fbd0afe13a",
+                    "use": "sig",
+                    "alg": "RS256",
+                    "n": "kjE93p-dW0zKVaV_46phA0q2iJiiBh_yRcFp9HSFfEYgQVUAAVkNbzikScfwldjapctGD2E1tWGTo9fvjWyYDmElyFk19EAXeB5ZmJ8AHOjvTqa-A4PVaow8yZR4P-_rSSavnNalZjSkda9kP78ik1kZAio4kjZARdDdVryFeee47Y8wPppA0xSUv75EU3qQE8RV9YIA9VF0Izsjhg3LKFSO_hvUM8YDEMOOm5JW6hbtVmuBQOHmqY3LBNyzrrxQKbjdm2oCcXZI5F1UKMZwjCTgtdrqglKBGbMiTgj_Z5rPfSbviVY3dvxcUBd2v6r2cZCZBbvXNMQb8mH20y8c0w",
+                    "e": "AQAB"
+                }
+            ]
+        }
+
+
 
 ## Authenticating [/auth]
 

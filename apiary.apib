@@ -27,15 +27,24 @@ An Access Token should be added to the HTTP Authorization header like so:
 
 With `access_token` obviously replaced by the Access Token that you received from the [Token endpoint](#/reference/auth-api/token).
 
-## Authentication [/auth/auth{?response_type,state,scope,client_id,client_secret,code_challenge,code_challenge_method,redirect_uri,id_token}]
+## Authentication [/auth/auth]
 The first step is to get a *proof of authentication*. This is the `code` that will be returned to you after this step. It will be sent in the form of a redirect to a registered URI.
 
 > **One exception: Confidential clients that have non-public accessible code can keep a `clientSecret` hidden from public view!**   
 > They can hit the [Token endpoint](#/reference/auth-api/token) immediatly as their client credentials act as *a proof of authentication*.**
 
-### Init auth URL [GET]
-You should point your user agent to this URL. A 302 should return you to the appropriate login page where the user can login using his/her desired Identity Provider.
-The result of this step will be a `code` which is the proof of authentication and sent to the `redirec_uri`. This will be used at the [Token endpoint](#/reference/auth-api/token) to exchange for an Access Token.
+### GET Authentication URL [GET /auth/auth{?response_type,state,scope,client_id,client_secret,code_challenge,code_challenge_method,redirect_uri,id_token}]
+You should point your user agent to this URL. A 302 Redirect should return you to the appropriate login page where the user can login using his/her desired Identity Provider.
+The result of this step will be a `code` which is the proof of authentication and sent to the `redirect_uri`. This will be used at the [Token endpoint](#/reference/auth-api/token) to exchange for an Access Token.
+
+There are a lot of parameters available, but depending on the type of Client you have, some fields are required and others are not.
+
+Confidential    | On behalf of User |  Data Structure
+----------------|-------------------|-----------------
+no              | yes               | [PublicUserAuthRequest](#/data-structures/0/public-user-auth-request)
+no              | no                | [PublicClientAuthRequest](#/data-structures/0/public-client-auth-request)
+yes             | yes               | [ConfidentialUserAuthRequest](#/data-structures/0/confidential-user-auth-request)
+yes             | no                | [ConfidentialClientAuthRequest](#/data-structures/0/confidential-client-auth-request)
 
 + Parameters
     + `response_type`: `code` (fixed) - The response type that will be sent back. Only `code` is supported.
@@ -65,8 +74,9 @@ The result of this step will be a `code` which is the proof of authentication an
 
         Location: https://redirect_uri?code=abcd&state=1234
         
-### Init auth POST [POST]
+### POST to get Authentication URL [POST]
 If required you can perform a form post in code. **Just remember that this will return a 302 redirect URL that you should point your user agent to!**
+The parameters are exactly the same as above
 
     
 + Request (application/x-www-url-encoded)
@@ -81,16 +91,38 @@ If required you can perform a form post in code. **Just remember that this will 
 ## Token [/auth/token]
 Exchange a `code` for a token. The [Authentication step](#/reference/auth-api/authorization) gave you a `code` as *proof of authentication*. You can now use it to exchange it with a token.
 
-The response is a json object containing the key `token`: this is your Access Token for the Obelisk APIs. 
+The response is a JSON object containing the key `token`: **this is your Access Token for the Obelisk APIs.**
 There is also an `id_token` which you can use to personalize your application to the user.
 If you store it, you can send it to the [Authentication endpoint](#/reference/auth-api/authorization) to skip login, 
 if there is a session active for that user.
 
-The `remember_me` is a hint towards the Client application. It is set to true if the user toggled *remember me* during the login proces.
+The `remember_me` is a hint towards the Client application. It is set to `true` if the user toggled *remember me* during the login proces.
 
 ### Getting a Token [POST]
+You can send quite a few parameters along (as you can see in the `All Parameters` request).
+To simplify things, you can use the table below and pick the format that you need to send.
 
-+ Request (application/json)
+Confidential    | On behalf of User | Request
+----------------|-------------------|-----------------
+no              | yes               | `AuthCode with PKCE`
+no              | no                | `AuthCode with PKCE`
+yes             | yes               | `AuthCode no PKCE`
+yes             | no                | `ClientCredentials`
+
+
++ Request AuthCode with PKCE (application/json)
+
+    + Attributes (CodePKCETokenRequest)
+
++ Request AuthCode no PKCE (application/json)
+
+    + Attributes (CodeNoPKCETokenRequest)
+
++ Request ClientCredentials (application/json)
+
+    + Attributes (ClientCredTokenRequest)
+    
++ Request All Parameters (application/json)
 
     + Attributes (TokenRequest)
 
@@ -102,6 +134,7 @@ The `remember_me` is a hint towards the Client application. It is set to true if
           "expires_in" : 86400,
           "remember_me" : false
         }
+
 
 ## OpenID Configuration [/.well-known/openid-configuration]
 Obelisk Auth hosts an openid-configuration page that contains all important information for OpenId communication.
@@ -654,12 +687,49 @@ When querying raw events using this DataRange, the resultset will contain values
 + One Of
     + Properties
         + `code_challenge` (string) - **If your code is publicly readable, always use a code challenge!** _(eg. Single Page Applications, Regular websites)_
-        + `code_challenge_method` (enum) - Tell the backend which hash method you used.
-            + `S256` - **Recommended!** (high security)
-            + `plain`- _Not recommended_ (low security)
+        + `code_challenge_method`: `S256` (fixed) - Tell the backend which hash method you used. *(SHA-256)*.
     + `client_secret` (string) - **Only if your code is not publicly available, can you use a client_secret.** _(eg. Application Servers, Personal scripts)_
 + `redirect_uri` (string, optional) - Full https URL that will be called with the `code` after the authentication procedure on the backend is done.
 + `id_token` (string, optional) - Send an ID Token as proof of your authentication. This will make you skip login, if there is a session still active for you on the Obelisk Auth backend.
+
+## PublicUserAuthRequest (object)
++ `response_type`: code (fixed) - The response type that will be sent back. Currently only `code` is supported.
++ state (string) - A url-encoded string representing state. This string will be sent back in its integrity to the client.
++ scope: `openid` (string) - **To authenticate on behalf of a user at least `openid` scope is required.**
++ `client_id` (string) - The clientId of the client that is being used to log in (with).
++ `code_challenge` (string) - More information on how to [generate a code_challenge](TODO://LINK TO DOCS).
++ `code_challenge_method`: `S256` (fixed) - Tell the backend which hash method you used. *(SHA-256)*.
++ `redirect_uri` (string, optional) - Full https URL that will be called with the `code` after the authentication procedure on the backend is done.
++ `id_token` (string, optional) - Send an ID Token as proof of your authentication. This will make you skip login, if there is a session still active for you on the Obelisk Auth backend.
+
+## PublicClientAuthRequest (object)
++ `response_type`: code (fixed) - The response type that will be sent back. Currently only `code` is supported.
++ state (string) - A url-encoded string representing state. This string will be sent back in its integrity to the client.
++ scope: `client` (string) - **To authenticate as a client application at least `client` scope is required.**
++ `client_id` (string) - The clientId of the client that is being used to log in (with).
++ `code_challenge` (string) - More information on how to [generate a code_challenge](TODO://LINK TO DOCS).
++ `code_challenge_method`: `S256` (fixed) - Tell the backend which hash method you used. *(SHA-256)*.
++ `redirect_uri` (string, optional) - Full https URL that will be called with the `code` after the authentication procedure on the backend is done.
++ `id_token` (string, optional) - Send an ID Token as proof of your authentication. This will make you skip login, if there is a session still active for you on the Obelisk Auth backend.
+
+## ConfidentialUserAuthRequest (object)
++ `response_type`: code (fixed) - The response type that will be sent back. Currently only `code` is supported.
++ state (string) - A url-encoded string representing state. This string will be sent back in its integrity to the client.
++ scope: `openid` (string) - **To authenticate on behalf of a user at least `openid` scope is required.**
++ `client_id` (string) - The client_id of the client that is being used to log in (with).
++ `client_secret` (string) - The client_secret of the client that is being used to log in (with).
++ `redirect_uri` (string, optional) - Full https URL that will be called with the `code` after the authentication procedure on the backend is done.
++ `id_token` (string, optional) - Send an ID Token as proof of your authentication. This will make you skip login, if there is a session still active for you on the Obelisk Auth backend.
+
+## ConfidentialClientAuthRequest (object)
++ `response_type`: code (fixed) - The response type that will be sent back. Currently only `code` is supported.
++ state (string) - A url-encoded string representing state. This string will be sent back in its integrity to the client.
++ scope: `client` (string) -  **To authenticate as a client application at least `client` scope is required.**
++ `client_id` (string) - The client_id of the client that is being used to log in (with).
++ `client_secret` (string) - The client_secret of the client that is being used to log in (with).
++ `redirect_uri` (string, optional) - Full https URL that will be called with the `code` after the authentication procedure on the backend is done.
++ `id_token` (string, optional) - Send an ID Token as proof of your authentication. This will make you skip login, if there is a session still active for you on the Obelisk Auth backend.
+
 
 ## TokenRequest (object)
 + `grant_type` (enum[string], required) - Which kind of *proof of authentication* are you sending.
@@ -671,4 +741,22 @@ When querying raw events using this DataRange, the resultset will contain values
     + `code_verifier` (string, required) - The code_verifier that was being used to generate the code_challenge in the [Authentication step](#/reference/auth-api/authentication) 
         **Use with publicly accessible clients**
     + `client_secret` (string, required) - The client_secret of the Client that is being used to authenticate (with)
+        **Use only with non-publicly-accessible (confidential) clients!**
+
+## CodePKCETokenRequest (object)
++ `grant_type`: `authorization_code` (fixed, required) - This requires you to send the `code` and `code_verifier` paramteres along
++ code (string) - The `code` retrieved from the authentication step. 
++ `client_id` (string, required) - The client_iod of the Client that is being used to authenticate (with)
++ `code_verifier` (string, required) - The code_verifier that was being used to generate the code_challenge in the [Authentication step](#/reference/auth-api/authentication)
+
+## CodeNoPKCETokenRequest (object)
++ `grant_type`: `authorization_code` (fixed, required) - This requires you to send the `code` and `code_verifier` paramteres along
++ code (string) - The `code` retrieved from the authentication step. 
++ `client_id` (string, required) - The client_iod of the Client that is being used to authenticate (with)
++ `client_secret` (string, required) - The client_secret of the Client that is being used to authenticate (with)
+
+## ClientCredTokenRequest (object)
++ `grant_type`: `client_credentials` (fixed, required) - This requires you to send the `clientSecret` parameters along.
++ `client_id` (string, required) - The client_iod of the Client that is being used to authenticate (with)
++ `client_secret` (string, required) - The client_secret of the Client that is being used to authenticate (with)
         **Use only with non-publicly-accessible (confidential) clients!**

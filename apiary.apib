@@ -19,6 +19,89 @@ The following Reference material details how to authenticate, how discover datas
 
 # Group Auth API
 This API allows you to authenticate yourself or your client application with the Obelisk Auth backend. Before you can use most of the APIs below, you will need to be authenticated first. An Access Token will be the proof that you are authenticated and authorized to execute the protected APIs.
+Generally speaking, you always first need to execute the *authentication* step to receive a proof of authentication (`code`). Then you can exchange the proof of authentication for an Access Token. This Access Token can than be used for all the Obelisk APIs.
+
+An Access Token should be added to the HTTP Authorization header like so:
+
+> Authorization: Bearer `access_token`
+
+With `access_token` obviously replaced by the Access Token that you received from the [Token endpoint](#/reference/auth-api/token).
+
+## Authentication [/auth/auth{?response_type,state,scope,client_id,client_secret,code_challenge,code_challenge_method,redirect_uri,id_token}]
+The first step is to get a *proof of authentication*. This is the `code` that will be returned to you after this step. It will be sent in the form of a redirect to a registered URI.
+
+> **One exception: Confidential clients that have non-public accessible code can keep a `clientSecret` hidden from public view!**   
+> They can hit the [Token endpoint](#/reference/auth-api/token) immediatly as their client credentials act as *a proof of authentication*.**
+
+### Init auth URL [GET]
+You should point your user agent to this URL. A 302 should return you to the appropriate login page where the user can login using his/her desired Identity Provider.
+The result of this step will be a `code` which is the proof of authentication and sent to the `redirec_uri`. This will be used at the [Token endpoint](#/reference/auth-api/token) to exchange for an Access Token.
+
++ Parameters
+    + `response_type`: `code` (fixed) - The response type that will be sent back. Only `code` is supported.
+    + state (string) - A url-encoded string representing state. This string will be sent back in its integrity to the client.
+    + scope (enum[string]) (string) - A space-delimited list of requested scopes.
+        + `openid` - **To authenticate on behalf of a user at least `openid` scope is required.**
+        + `client` - **To authenticate as a client application at least `client` scope is required.**
+    + `client_id` (string) - The clientId of the client that is being used to log in with.
+    + `code_challenge` (string, optional) - **If your code is publicly readable, always use a code challenge!** 
+    
+        *(eg. Single Page Applications, Regular websites)*
+        
+    + `code_challenge_method` (enum[string], optional) - Tell the backend which hash method you used.
+        + Members
+            + `S256` - **Recommended!** (high security)
+            + `plain`- _Not recommended_ (low security)
+    + `client_secret` (string, optional) - **Only if your code is not publicly available, can you use a `client_secret`.** 
+    
+        *(eg. Application Servers, Personal scripts)*
+            
+    + `redirect_uri` (string, optional) - Full https URL that will be called with the `code` after the authentication procedure on the backend is done.
+    + `id_token` (string, optional) - Send an ID Token as proof of your authentication. This will make you skip login, if there is a session still active for you on the Obelisk Auth backend.
+    
++ Request (application/x-www-url-encoded)
+
++ Response 302
+
+        Location: https://redirect_uri?code=abcd&state=1234
+        
+### Init auth POST [POST]
+If required you can perform a form post in code. **Just remember that this will return a 302 redirect URL that you should point your user agent to!**
+
+    
++ Request (application/x-www-url-encoded)
+
+    + Attributes (AuthRequest)
+
++ Response 302
+
+        Location: https://redirect_uri?code=abcd&state=1234
+
+
+## Token [/auth/token]
+Exchange a `code` for a token. The [Authentication step](#/reference/auth-api/authorization) gave you a `code` as *proof of authentication*. You can now use it to exchange it with a token.
+
+The response is a json object containing the key `token`: this is your Access Token for the Obelisk APIs. 
+There is also an `id_token` which you can use to personalize your application to the user.
+If you store it, you can send it to the [Authentication endpoint](#/reference/auth-api/authorization) to skip login, 
+if there is a session active for that user.
+
+The `remember_me` is a hint towards the Client application. It is set to true if the user toggled *remember me* during the login proces.
+
+### Getting a Token [POST]
+
++ Request (application/json)
+
+    + Attributes (TokenRequest)
+
++ Response 200 (application/json)
+
+        {
+          "token" : "XNQNtuEZDfarzeDN",
+          "id_token" : "eyJraWQiOiI4MWQ5MjhjYi1hNjQ4LTQyMDktYjk4OC00NjE0NDY2YTYyZTUiLCJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjNjA1YjQ2OGYzZGQ1MTY2NmJjOTM4MGU5IiwibmFtZSI6IlB1YmxpY0FzSXRzZWxmIiwiZW1haWwiOiJ0ZXN0ZXJAb2JseC5pbyIsImlkcCI6ImxvY2FsIiwidHlwZSI6ImNsaWVudCIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4MC9hdXRoIiwiYXVkIjoiUHVibGljQXNJdHNlbGYiLCJleHAiOjE2MTkxODY1NzYsImp0aSI6Ik13YTJ0Tl9oZDNUaEhqZUdaOU5vTEEiLCJpYXQiOjE2MTY1OTQ1NzYsIm5iZiI6MTYxNjU5NDQ1Niwic2lkIjoiSVVUM0xITzhYRFl4MGk2ZyJ9.fH-ZBytOI6rBrH-CCBixpIvmD-MGflELiz2Kn1qiGfRREOT6wpGrEmxueyYLmhJDJkLswrcCdhKgM747MvPB4rkoRVM4DlYpDKzl4mIsb0bua1hC-TkxG5aW8W9ZUNj1vMXotDDnLPQhWtOPFDxyum2qdu8OHzQmTENuo72ujuegF4irv4BahW33fVUk7YznSHmoRwjFGqtzcvPZCfpD30fe-Q42aTQlGKig7cavVx5wFs2FNljdv9ft41g5HoneRTdRIDtsjYtMbk3z4OSE9uFIlGFjReAsIOn0ZvRKlrbCBb027kDHjQn15ZJvaBNlpuJorINalsKgrFs6fCCYPw",
+          "expires_in" : 86400,
+          "remember_me" : false
+        }
 
 ## OpenID Configuration [/.well-known/openid-configuration]
 Obelisk Auth hosts an openid-configuration page that contains all important information for OpenId communication.
@@ -71,76 +154,7 @@ Obelisk ID Tokens are asymmetrically signed as a JWT (JSON Web Token). If desire
         }
 
 
-
-## User authentication [/auth/auth{?response_type,state,scope,client_id,client_secret,code_challenge,code_challenge_method,redirect_uri,id_token}]
-Authenticate on behalf of a Obelisk User through an application. This way you will request authorizations for this user, within the restrictions of the client application being used.
-
-### Init auth via URL [GET]
-Redirect your user agent to this URL. A 302 should return you to the appropriate login page.
-
-+ Parameters
-    + `response_type`: `code` (fixed) - The response type that will be sent back. Currently only `code` is supported.
-    + state (string) - A urlEncoded string representing state. This string will be sent back to the client, and has to be the identical.
-    + scope: `openid` (string) -  A space-delimited list of requested scopes.
-        
-        **To authenticate on behalf of a user at least `openid` scope is required.**
-        
-    + `client_id` (string) - The clientId of the client that is being used to log in with.
-    + `code_challenge` (string, optional) - **If your code is publicly readable, always use a code challenge!** 
-    
-        *(eg. Single Page Applications, Regular websites)*
-        
-    + `code_challenge_method` (enum[string], optional) - Tell the backend which hash method you used.
-        + Members
-            + `S256` - **Recommended!** (high security)
-            + `plain`- _Not recommended_ (low security)
-    + `client_secret` (string, optional) - **Only if your code is not publicly available, can you use a `client_secret`.** 
-    
-        *(eg. Application Servers, Personal scripts)*
-            
-    + `redirect_uri` (string, optional) - Full URL that will be called with the `code` after the authentication procedure on the backend is done.
-    + `id_token` (string, optional) - Send an ID Token as proof of your authentication. This will make you skip login, if there is a session still active for you on the Obelisk Auth backend.
-    
-+ Request (application/x-www-url-encoded)
-
-+ Response 302
-
-### Init auth via form post [POST]
-If required you can perform a form post in code. **Just remember that this will return a 302 redirect URL that you should point your user agent to!**
-
-+ Attributes (UserAuthRequest)
-    
-+ Request (application/x-www-url-encoded)
-
-+ Response 302
-
-## Client authentication [/auth/auth]
-Authenticate as a Client Application. This way you will request authorizations for the client application being used.
-
-### Init auth [POST]
-
-+ Attributes (ClientAuthRequest)
-
-+ Request (application/x-www-url-encoded)
-
-+ Response 200
-
-        {
-            "code": "LCd324D3KLD294l",
-            "state": "asasdfewLCd324D3KLD294l"
-        }
-
-## Token [/auth/token]
-Exchange a code for a token. The authentication step gave you a `code` as proof of your authentication. You can now use it to exchange it with a token.
-
-### Getting a Token [POST]
-
-+ Request (application/json)
-
-+ Response 200 (application/json)
-
-
-# Group Catalog APIut
+# Group Catalog API
 This API allows you to interact with Obelisk as a Data Catalog. 
 Most clients will mainly be using the Catalog to discover which Datasets are available and 
 which Metrics and Sources (e.g. sensor devices) they provide. The resulting information can then be used to query the Data API.
@@ -630,11 +644,13 @@ When querying raw events using this DataRange, the resultset will contain values
 + mimeType: application/pdf (string) - MIME type (e.g. image/png) for the resource.
 + sizeBytes: 145408 (number) - The file size of the Resource (in bytes).
 
-## UserAuthRequest (object)
+## AuthRequest (object)
 + `response_type`: code (fixed) - The response type that will be sent back. Currently only `code` is supported.
-+ state (string) - A url-encoded string representing state. This string will be sent back to the client, and has to be the identical.
-+ scope: `openid` (string) - A space-delimited list of requested scopes. **To authenticate on behalf of a user at least `openid` scope is required.**
-+ client_id (string) - The clientId of the client that is being used to log in with.
++ state (string) - A url-encoded string representing state. This string will be sent back in its integrity to the client.
++ scope (enum[string]) (string) - A space-delimited list of requested scopes.
+    + `openid` - **To authenticate on behalf of a user at least `openid` scope is required.**
+    + `client` - **To authenticate as a client application at least `client` scope is required.**
++ `client_id` (string) - The clientId of the client that is being used to log in (with).
 + One Of
     + Properties
         + `code_challenge` (string) - **If your code is publicly readable, always use a code challenge!** _(eg. Single Page Applications, Regular websites)_
@@ -642,20 +658,17 @@ When querying raw events using this DataRange, the resultset will contain values
             + `S256` - **Recommended!** (high security)
             + `plain`- _Not recommended_ (low security)
     + `client_secret` (string) - **Only if your code is not publicly available, can you use a client_secret.** _(eg. Application Servers, Personal scripts)_
-+ redirect_uri (string, optional) - Full URL that will be called with the `code` after the authentication procedure on the backend is done.
-+ id_token (string, optional) - Send an ID Token as proof of your authentication. This will make you skip login, if there is a session still active for you on the Obelisk Auth backend.
++ `redirect_uri` (string, optional) - Full https URL that will be called with the `code` after the authentication procedure on the backend is done.
++ `id_token` (string, optional) - Send an ID Token as proof of your authentication. This will make you skip login, if there is a session still active for you on the Obelisk Auth backend.
 
-## ClientAuthRequest (object)
-+ `response_type`: code (fixed) - The response type that will be sent back. Currently only `code` is supported.
-+ state (string) - A url-encoded string representing state. This string will be sent back to the client, and has to be the identical.
-+ scope: `client` (string) - A space-delimited list of requested scopes. **To authenticate as a client application at least `client` scope is required.**
-+ client_id (string) - The clientId of the client that is being used to log in with.
-+ One Of
-    + Properties
-        + `code_challenge` (string) - **If your code is publicly readable, always use a code challenge!** _(eg. Single Page Applications, Regular websites)_
-        + `code_challenge_method` (enum) - Tell the backend which hash method you used.
-            + `S256` - **Recommended!** (high security)
-            + `plain`- _Not recommended_ (low security)
-    + `client_secret` (string) - **Only if your code is not publicly available, can you use a client_secret.** _(eg. Application Servers, Personal scripts)_
-+ redirect_uri (string, optional) - Full URL that will be called with the `code` after the authentication procedure on the backend is done.
-+ id_token (string, optional) - Send an ID Token as proof of your authentication. This will make you skip login, if there is a session still active for you on the Obelisk Auth backend.
+## TokenRequest (object)
++ `grant_type` (enum[string], required) - Which kind of *proof of authentication* are you sending.
+    + `authorization_code` - This requires you to send the `code` parameter along and either `code_verifier` or `client_secret`.
+    + `client_credentials` - This requires you to send the `clientSecret` parameters along.
++ code (string) - The `code` retrieved from the authentication step. *(not required for `client_credentials` grant_type)*
++ `client_id` (string, required) - The client_iod of the Client that is being used to authenticate (with)
++ One of
+    + `code_verifier` (string, required) - The code_verifier that was being used to generate the code_challenge in the [Authentication step](#/reference/auth-api/authentication) 
+        **Use with publicly accessible clients**
+    + `client_secret` (string, required) - The client_secret of the Client that is being used to authenticate (with)
+        **Use only with non-publicly-accessible (confidential) clients!**

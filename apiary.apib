@@ -99,15 +99,15 @@ if there is a session active for that user.
 The `remember_me` is a hint towards the Client application. It is set to `true` if the user toggled *remember me* during the login proces.
 
 ### Getting a Token [POST]
-You can send quite a few parameters along (as you can see in the `All Parameters` request).
+You can send quite a few parameters along (as you can see in the [All Parameters](#/reference/auth-api/token/getting-a-token/200-2?mc=reference%2Fauth-api%2Ftoken%2Fgetting-a-token%2F200-4) request).
 To simplify things, you can use the table below and pick the format that you need to send.
 
 Confidential    | On behalf of User | Request
 ----------------|-------------------|-----------------
-no              | yes               | `AuthCode with PKCE`
-no              | no                | `AuthCode with PKCE`
-yes             | yes               | `AuthCode no PKCE`
-yes             | no                | `ClientCredentials`
+no              | yes               | [AuthCode with PKCE](#/reference/auth-api/token/getting-a-token/200?mc=reference%2Fauth-api%2Ftoken%2Fgetting-a-token%2F200)
+no              | no                | [AuthCode with PKCE](#/reference/auth-api/token/getting-a-token/200?mc=reference%2Fauth-api%2Ftoken%2Fgetting-a-token%2F200)
+yes             | yes               | [AuthCode no PKCE](#/reference/auth-api/token/getting-a-token/200-2?mc=reference%2Fauth-api%2Ftoken%2Fgetting-a-token%2F200-2)
+yes             | no                | [ClientCredentials](#/reference/auth-api/token/getting-a-token/200-2?mc=reference%2Fauth-api%2Ftoken%2Fgetting-a-token%2F200-3)
 
 
 + Request AuthCode with PKCE (application/json)

@@ -136,6 +136,12 @@ Obelisk Auth hosts an openid-configuration page that contains all important info
 
 ### Get the OpenID-Configuration [GET]
 
++ Request GET OpenID-Configuration ()
+
+    + Body
+
+            {}
+
 + Response 200 (application/json)
 
         {
@@ -155,6 +161,12 @@ Obelisk Auth hosts an openid-configuration page that contains all important info
 Obelisk ID Tokens are asymmetrically signed as a JWT (JSON Web Token). If desired, the integrity of an ID Token can be verified with the keys hosted at the JWKS endpoint.
 
 ### Get the Obelisk JWK set [GET]
+
++ Request GET JWKS
+
+    + Body
+
+            {}
 
 + Response 200 (application/json)
 

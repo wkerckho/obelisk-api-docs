@@ -44,7 +44,7 @@ Confidential    | On behalf of User |  Data Structure
 no              | yes               | [PublicUserAuthRequest](#/data-structures/0/public-user-auth-request)
 no              | no                | [PublicClientAuthRequest](#/data-structures/0/public-client-auth-request)
 yes             | yes               | [ConfidentialUserAuthRequest](#/data-structures/0/confidential-user-auth-request)
-yes             | no                | [ConfidentialClientAuthRequest](#/data-structures/0/confidential-client-auth-request)
+yes             | no                | *(Immediately go to [Token](#/reference/auth-api/token) endpoint)*
 
 + Parameters
     + `response_type`: `code` (fixed) - The response type that will be sent back. Only `code` is supported.
@@ -57,14 +57,7 @@ yes             | no                | [ConfidentialClientAuthRequest](#/data-str
     
         *(eg. Single Page Applications, Regular websites)*
         
-    + `code_challenge_method` (enum[string], optional) - Tell the backend which hash method you used.
-        + Members
-            + `S256` - **Recommended!** (high security)
-            + `plain`- _Not recommended_ (low security)
-    + `client_secret` (string, optional) - **Only if your code is not publicly available, can you use a `client_secret`.** 
-    
-        *(eg. Application Servers, Personal scripts)*
-            
+    + `code_challenge_method`: `S256` (string, optional) - Tell the backend which hash method you used.
     + `redirect_uri` (string, optional) - Full https URL that will be called with the `code` after the authentication procedure on the backend is done.
     + `id_token` (string, optional) - Send an ID Token as proof of your authentication. This will make you skip login, if there is a session still active for you on the Obelisk Auth backend.
     
@@ -699,11 +692,8 @@ When querying raw events using this DataRange, the resultset will contain values
     + `openid` - **To authenticate on behalf of a user at least `openid` scope is required.**
     + `client` - **To authenticate as a client application at least `client` scope is required.**
 + `client_id` (string) - The clientId of the client that is being used to log in (with).
-+ One Of
-    + Properties
-        + `code_challenge` (string) - **If your code is publicly readable, always use a code challenge!** _(eg. Single Page Applications, Regular websites)_
-        + `code_challenge_method`: `S256` (fixed) - Tell the backend which hash method you used. *(SHA-256)*.
-    + `client_secret` (string) - **Only if your code is not publicly available, can you use a client_secret.** _(eg. Application Servers, Personal scripts)_
++ `code_challenge` (string) - **If your code is publicly readable, always use a code challenge!** _(eg. Single Page Applications, Regular websites)_
++ `code_challenge_method`: `S256` (fixed) - Tell the backend which hash method you used. *(SHA-256)*.
 + `redirect_uri` (string, optional) - Full https URL that will be called with the `code` after the authentication procedure on the backend is done.
 + `id_token` (string, optional) - Send an ID Token as proof of your authentication. This will make you skip login, if there is a session still active for you on the Obelisk Auth backend.
 
@@ -732,19 +722,8 @@ When querying raw events using this DataRange, the resultset will contain values
 + state (string) - A url-encoded string representing state. This string will be sent back in its integrity to the client.
 + scope: `openid` (string) - **To authenticate on behalf of a user at least `openid` scope is required.**
 + `client_id` (string) - The client_id of the client that is being used to log in (with).
-+ `client_secret` (string) - The client_secret of the client that is being used to log in (with).
 + `redirect_uri` (string, optional) - Full https URL that will be called with the `code` after the authentication procedure on the backend is done.
 + `id_token` (string, optional) - Send an ID Token as proof of your authentication. This will make you skip login, if there is a session still active for you on the Obelisk Auth backend.
-
-## ConfidentialClientAuthRequest (object)
-+ `response_type`: code (fixed) - The response type that will be sent back. Currently only `code` is supported.
-+ state (string) - A url-encoded string representing state. This string will be sent back in its integrity to the client.
-+ scope: `client` (string) -  **To authenticate as a client application at least `client` scope is required.**
-+ `client_id` (string) - The client_id of the client that is being used to log in (with).
-+ `client_secret` (string) - The client_secret of the client that is being used to log in (with).
-+ `redirect_uri` (string, optional) - Full https URL that will be called with the `code` after the authentication procedure on the backend is done.
-+ `id_token` (string, optional) - Send an ID Token as proof of your authentication. This will make you skip login, if there is a session still active for you on the Obelisk Auth backend.
-
 
 ## TokenRequest (object)
 + `grant_type` (enum[string], required) - Which kind of *proof of authentication* are you sending.

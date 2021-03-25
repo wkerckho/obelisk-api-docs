@@ -37,7 +37,7 @@ The first step is to get a *proof of authentication*. This is the `code` that wi
 You should point your user agent to this URL. A 302 Redirect should return you to the appropriate login page where the user can login using his/her desired Identity Provider.
 The result of this step will be a `code` which is the proof of authentication and sent to the `redirect_uri`. This will be used at the [Token endpoint](#/reference/auth-api/token) to exchange for an Access Token.
 
-There are a lot of parameters available, but depending on the type of Client you have, some fields are required and others are not.
+There are a lot of parameters available, but depending on the type of Client you have, some fields are required and others are not. Use the table below to match the properties of your client with the correct set of parameters.
 
 Confidential    | On behalf of User |  Data Structure
 ----------------|-------------------|-----------------
@@ -68,63 +68,80 @@ yes             | no                | [ConfidentialClientAuthRequest](#/data-str
     + `redirect_uri` (string, optional) - Full https URL that will be called with the `code` after the authentication procedure on the backend is done.
     + `id_token` (string, optional) - Send an ID Token as proof of your authentication. This will make you skip login, if there is a session still active for you on the Obelisk Auth backend.
     
-+ Request (application/x-www-url-encoded)
++ Request GET Auth (application/x-www-url-encoded)
 
 + Response 302
 
-        Location: https://redirect_uri?code=abcd&state=1234
+    + Headers
+
+            Location: https://redirect_uri?code=abcd&state=1234
         
 ### POST to get Authentication URL [POST]
 If required you can perform a form post in code. **Just remember that this will return a 302 redirect URL that you should point your user agent to!**
 The parameters are exactly the same as above
 
     
-+ Request (application/x-www-url-encoded)
++ Request POST Auth (application/x-www-url-encoded)
 
     + Attributes (AuthRequest)
 
 + Response 302
 
-        Location: https://redirect_uri?code=abcd&state=1234
+    + Headers
+    
+            Location: https://redirect_uri?code=abcd&state=1234
 
 
 ## Token [/auth/token]
-Exchange a `code` for a token. The [Authentication step](#/reference/auth-api/authorization) gave you a `code` as *proof of authentication*. You can now use it to exchange it with a token.
+Exchange a `code` for a token. The [Authentication step](#/reference/auth-api/authentication) gave you a `code` as *proof of authentication*. You can now use it to exchange it with a token.
 
 The response is a JSON object containing the key `token`: **this is your Access Token for the Obelisk APIs.**
 There is also an `id_token` which you can use to personalize your application to the user.
-If you store it, you can send it to the [Authentication endpoint](#/reference/auth-api/authorization) to skip login, 
+If you store it, you can send it to the [Authentication endpoint](#/reference/auth-api/authentication) to skip login, 
 if there is a session active for that user.
 
 The `remember_me` is a hint towards the Client application. It is set to `true` if the user toggled *remember me* during the login proces.
 
 ### Getting a Token [POST]
-You can send quite a few parameters along (as you can see in the [All Parameters](#/reference/auth-api/token/getting-a-token/200-2?mc=reference%2Fauth-api%2Ftoken%2Fgetting-a-token%2F200-4) request).
+You can send quite a few parameters along (as you can see in the [TokenRequest](#/data-structures/0/token-request) data structure.
 To simplify things, you can use the table below and pick the format that you need to send.
 
 Confidential    | On behalf of User | Request
 ----------------|-------------------|-----------------
-no              | yes               | [AuthCode with PKCE](#/reference/auth-api/token/getting-a-token/200?mc=reference%2Fauth-api%2Ftoken%2Fgetting-a-token%2F200)
-no              | no                | [AuthCode with PKCE](#/reference/auth-api/token/getting-a-token/200?mc=reference%2Fauth-api%2Ftoken%2Fgetting-a-token%2F200)
-yes             | yes               | [AuthCode no PKCE](#/reference/auth-api/token/getting-a-token/200-2?mc=reference%2Fauth-api%2Ftoken%2Fgetting-a-token%2F200-2)
-yes             | no                | [ClientCredentials](#/reference/auth-api/token/getting-a-token/200-2?mc=reference%2Fauth-api%2Ftoken%2Fgetting-a-token%2F200-3)
+no              | yes               | [Public Client](#/reference/auth-api/token/getting-a-token/200?mc=reference%2Fauth-api%2Ftoken%2Fgetting-a-token%2F200)
+no              | no                | [Public Client](#/reference/auth-api/token/getting-a-token/200?mc=reference%2Fauth-api%2Ftoken%2Fgetting-a-token%2F200)
+yes (*)         | yes               | [Confidential Client for User](#/reference/auth-api/token/getting-a-token/200-2?mc=reference%2Fauth-api%2Ftoken%2Fgetting-a-token%2F200-2)
+yes (*)         | no                | [Confidential Client](#/reference/auth-api/token/getting-a-token/200-2?mc=reference%2Fauth-api%2Ftoken%2Fgetting-a-token%2F200-3)
 
+**(*) Confidential clients must send the `client_id`, `client_secret` pair using the HTTP Authorization Basic scheme.**
 
-+ Request AuthCode with PKCE (application/json)
+```javascript
+/** PSEUDO CODE - Adapt to your programming language **/
+// base64 encode the credential pair concatenated by a colon
+var enc = Base64.encode(client_id + ":" + client_secret)    
+// Add the Authorization header to the following string
+var headers = { Authorization: "Basic " + enc };
+```
+
++ Request POST as Public Client (application/json)
 
     + Attributes (CodePKCETokenRequest)
 
-+ Request AuthCode no PKCE (application/json)
++ Request POST as Confidential Client for User (application/json)
+
+    + Headers
+        
+            Authorization: Basic Y2xpZW50X2lkOmNsaWVudF9zZWNyZXQ=
 
     + Attributes (CodeNoPKCETokenRequest)
 
-+ Request ClientCredentials (application/json)
++ Request POST as Confidential Client (application/json)
+
+    + Headers
+        
+            Authorization: Basic Y2xpZW50X2lkOmNsaWVudF9zZWNyZXQ=
 
     + Attributes (ClientCredTokenRequest)
-    
-+ Request All Parameters (application/json)
-
-    + Attributes (TokenRequest)
 
 + Response 200 (application/json)
 
@@ -147,16 +164,14 @@ Obelisk Auth hosts an openid-configuration page that contains all important info
             "issuer": "https://obelisk.ilabt.imec.be/api/v3/auth",
             "token_endpoint": "https://obelisk.ilabt.imec.be/api/v3/auth/token",
             "jwks_uri": "https://obelisk.ilabt.imec.be/api/v3/auth/jwks",
-            "id_token_signing_alg_values_supported": "RS256",
+            "id_token_signing_alg_values_supported": [
+                "RS256"
+            ],
             "code_challenge_methods_supported": [
                 "plain",
                 "S256"
             ]
         }
-        
-### Head the OpenID-Configuration [HEAD]
-
-+ Response 200
 
 ## JWKS - Json Web Key Set [/auth/jwks]
 Obelisk ID Tokens are asymmetrically signed as a JWT (JSON Web Token). If desired, the integrity of an ID Token can be verified with the keys hosted at the JWKS endpoint.
@@ -753,10 +768,7 @@ When querying raw events using this DataRange, the resultset will contain values
 + `grant_type`: `authorization_code` (fixed, required) - This requires you to send the `code` and `code_verifier` paramteres along
 + code (string) - The `code` retrieved from the authentication step. 
 + `client_id` (string, required) - The client_iod of the Client that is being used to authenticate (with)
-+ `client_secret` (string, required) - The client_secret of the Client that is being used to authenticate (with)
 
 ## ClientCredTokenRequest (object)
-+ `grant_type`: `client_credentials` (fixed, required) - This requires you to send the `clientSecret` parameters along.
-+ `client_id` (string, required) - The client_iod of the Client that is being used to authenticate (with)
-+ `client_secret` (string, required) - The client_secret of the Client that is being used to authenticate (with)
-        **Use only with non-publicly-accessible (confidential) clients!**
++ `grant_type`: `client_credentials` (fixed, required) - This requires you to send the `client_secret` parameters along.
++ `client_id` (string, required) - The client_id of the Client that is being used to authenticate (with)

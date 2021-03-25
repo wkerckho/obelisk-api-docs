@@ -67,22 +67,7 @@ yes             | no                | *(Immediately go to [Token](#/reference/au
 
     + Headers
 
-            Location: https://redirect_uri?code=abcd&state=1234
-        
-### POST to get Authentication URL [POST]
-If required you can perform a form post in code. **Just remember that this will return a 302 redirect URL that you should point your user agent to!**
-The parameters are exactly the same as above
-
-    
-+ Request POST Auth (application/x-www-url-encoded)
-
-    + Attributes (AuthRequest)
-
-+ Response 302
-
-    + Headers
-    
-            Location: https://redirect_uri?code=abcd&state=1234
+            Location: https://redirect_uri?code=abcd&state=1234ost
 
 
 ## Token [/auth/token]

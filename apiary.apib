@@ -27,6 +27,10 @@ An Access Token should be added to the HTTP Authorization header like so:
 
 With `access_token` obviously replaced by the Access Token that you received from the [Token endpoint](#/reference/auth-api/token).
 
+**Client options**
+
+A very important decision is if your client is confidential or not. It will determine how you have to login to keep your client secure. To help you with this decision you can read about this in the [Authentication guide](https://dev.obelisk.ilabt.imec.be/docs/guides/auth/#creating-a-client).
+
 ## Authentication [/auth/auth]
 The first step is to get a *proof of authentication*. This is the `code` that will be returned to you after this step. It will be sent in the form of a redirect to a registered URI.
 

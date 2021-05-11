@@ -97,13 +97,14 @@ yes (*)         | no                | [Confidential Client](#/reference/auth-api
 
 **(*) Confidential clients must send the `client_id`, `client_secret` pair using the HTTP Authorization Basic scheme.**
 
-```javascript
-/** PSEUDO CODE - Adapt to your programming language **/
-// base64 encode the credential pair concatenated by a colon
-var enc = Base64.encode(client_id + ":" + client_secret)    
-// Add the Authorization header to the following string
-var headers = { Authorization: "Basic " + enc };
-```
+> ```javascript
+> /***** How to construct a HTTP Authorization Basic header ******/
+> /** PSEUDO CODE - Adapt to your programming language **/
+> // base64 encode the credential pair concatenated by a colon
+> var enc = Base64.encode(client_id + ":" + client_secret)    
+> // Add the Authorization header to the following string
+> var headers = { Authorization: "Basic " + enc };
+> ```
 
 + Request POST as Public Client (application/json)
 

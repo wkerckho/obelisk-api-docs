@@ -379,15 +379,6 @@ Retrieve Metric Event objects in the form they were ingested into a Dataset. Var
 + Response 200 (application/json)
     + Attributes (EventsQueryResult)
 
-### Getting Latest Raw Events [POST /data/query/events/latest]
-Allows retrieving the latest value for each Metric that matches the query parameters. Useful for getting the last known state of a specific context.
-
-+ Request (application/json)
-    + Attributes (EventsQuery)
-
-+ Response 200 (application/json)
-    + Attributes (EventsQueryResult)
-
 ### Getting Aggregate Data [POST /data/query/events/stats]
 Calculate aggregate data (e.g. minimum value, count) over a specific Data Range. Aggregates can be calculated across Metric and Dataset boundaries, but are restricted to Metrics of type `::number` (including numerical Metrics derived from `::json`, e.g. `AirqualityObserved::json/temperature.value::number`).
 
@@ -752,8 +743,7 @@ When querying raw events using this DataRange, the resultset will contain values
 ## CodeNoPKCETokenRequest (object)
 + `grant_type`: `authorization_code` (fixed, required) - This requires you to send the `code` and `code_verifier` paramteres along
 + code (string) - The `code` retrieved from the authentication step. 
-+ `client_id` (string, required) - The client_iod of the Client that is being used to authenticate (with)
++ `client_id` (string, required) - The client_id of the Client that is being used to authenticate (with)
 
 ## ClientCredTokenRequest (object)
 + `grant_type`: `client_credentials` (fixed, required) - This requires you to send the `client_secret` parameters along.
-+ `client_id` (string, required) - The client_id of the Client that is being used to authenticate (with)

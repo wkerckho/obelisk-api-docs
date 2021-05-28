@@ -77,12 +77,27 @@ yes             | no                | *(Immediately go to [Token](#/reference/au
 ## Token [/auth/token]
 Exchange a `code` for a token. The [Authentication step](#/reference/auth-api/authentication) gave you a `code` as *proof of authentication*. You can now use it to exchange it with a token.
 
-The response is a JSON object containing the key `token`: **this is your Access Token for the Obelisk APIs.**
-There is also an `id_token` which you can use to personalize your application to the user.
-If you store it, you can send it to the [Authentication endpoint](#/reference/auth-api/authentication) to skip login, 
-if there is a session active for that user.
+**Response format**
 
-The `remember_me` is a hint towards the Client application. It is set to `true` if the user toggled *remember me* during the login proces.
+```json
+{
+    "token" : "XNQNtuEZDfarzeDN",
+    "id_token" : "eyJraWQiOiI4MWQ...aBNlpuJorINalsKgrFs6fCCYPw",
+    "max_idle_time" : 3600,
+    "max_valid_time": 86400,
+    "remember_me" : false
+}
+```
+
+key | description
+--- | -----------
+`token`| Your *access_token* to use as Bearer Token for Obelisk API calls.
+`id_token`| Your id_token, used for customizing your application to some user values. If you store it, you can send it to the [Authentication endpoint](#/reference/auth-api/authentication) to skip login, if there is a session active for that user.
+`max_idle_time`| Maximum time (in seconds) the access_token stays valid, if not being used on API calls.
+`max_valid_time`| Maximum time (in seconds) the access_token stays valid, even if it is being used within max_idle_time windows.
+`remember_me`| This is a hint towards the Client application. It is set to `true` if the user toggled *remember me* during the login proces. It is up to your own application to support this or not. The `remember_me` is a hint towards the Client application.
+
+
 
 ### Getting a Token [POST]
 You can send quite a few parameters along (as you can see in the [TokenRequest](#/data-structures/0/token-request) data structure.
@@ -131,7 +146,8 @@ yes (*)         | no                | [Confidential Client](#/reference/auth-api
         {
           "token" : "XNQNtuEZDfarzeDN",
           "id_token" : "eyJraWQiOiI4MWQ5MjhjYi1hNjQ4LTQyMDktYjk4OC00NjE0NDY2YTYyZTUiLCJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJjNjA1YjQ2OGYzZGQ1MTY2NmJjOTM4MGU5IiwibmFtZSI6IlB1YmxpY0FzSXRzZWxmIiwiZW1haWwiOiJ0ZXN0ZXJAb2JseC5pbyIsImlkcCI6ImxvY2FsIiwidHlwZSI6ImNsaWVudCIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4MC9hdXRoIiwiYXVkIjoiUHVibGljQXNJdHNlbGYiLCJleHAiOjE2MTkxODY1NzYsImp0aSI6Ik13YTJ0Tl9oZDNUaEhqZUdaOU5vTEEiLCJpYXQiOjE2MTY1OTQ1NzYsIm5iZiI6MTYxNjU5NDQ1Niwic2lkIjoiSVVUM0xITzhYRFl4MGk2ZyJ9.fH-ZBytOI6rBrH-CCBixpIvmD-MGflELiz2Kn1qiGfRREOT6wpGrEmxueyYLmhJDJkLswrcCdhKgM747MvPB4rkoRVM4DlYpDKzl4mIsb0bua1hC-TkxG5aW8W9ZUNj1vMXotDDnLPQhWtOPFDxyum2qdu8OHzQmTENuo72ujuegF4irv4BahW33fVUk7YznSHmoRwjFGqtzcvPZCfpD30fe-Q42aTQlGKig7cavVx5wFs2FNljdv9ft41g5HoneRTdRIDtsjYtMbk3z4OSE9uFIlGFjReAsIOn0ZvRKlrbCBb027kDHjQn15ZJvaBNlpuJorINalsKgrFs6fCCYPw",
-          "expires_in" : 86400,
+          "max_idle_time" : 3600,
+          "max_valid_time": 86400,
           "remember_me" : false
         }
 

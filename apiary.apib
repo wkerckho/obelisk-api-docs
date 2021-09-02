@@ -289,50 +289,6 @@ GraphQL exposes a single endpoint that you can use to execute GraphQL queries (o
     + Attributes (GraphQLRequest)
 + Response 200 (application/json)
 
-## Dataset Resources [/catalog/resources/{datasetId}]
-Sometimes it can be useful to attach resources such as documents or images to a Dataset. The Obelisk Catalog gives special meaning to Resources with the following ID (filename):
-* `thumbnail.png`: If present, this image file will be used to render a preview image for the Catalog Overview page in the Obelisk UI.
-* `banner.png`: If present, this image file will be used to render a header banner for the Dataset Details page in the Obelisk UI.
-* `README.MD`: If present, this [Markdown](https://www.markdownguide.org/) formatted text file will be used to render additional documentation for the Dataset Details page in the Obelisk UI.
-
-The following set of endpoints allow uploading, retrieving and deleting Dataset resources:
-
-+ Parameters
-    + datasetId: 1616caf8-dccf (string) - The ID of the Dataset the Resources are associated with.
-
-### Upload a Resource [POST /catalog/resources/{datasetId}?resourceType={resourceType}&overwrite={overwrite}]
-Upload a file as a Resource for the specified Dataset. Only Users or Clients with `MANAGE` permissions for a Dataset can call this operation.
-
-+ Parameters
-    + resourceType: thumbnail (enum) - Indicates a specific resource type, e.g. if set to thumbnail, any uploaded PNG file will be stored as `thumbnail.png` so it can be used from the Obelisk UI. _Default value_: `other` (no special meaning).
-        - thumbnail
-        - banner
-        - readme
-        - other
-    + overwrite: false (boolean) - Indicates if the uploaded file should overwrite the existing content, if a Resource with the specified filename already exists. _Default value_: `false`
-+ Request (multipart/form-data)
-+ Response 201
-
-### List Resources [GET]
-List the Resources that are associated with a specific Dataset. For _published_ Datasets, any user can call this endpoint, otherwise access is restricted to Dataset members.
-
-+ Response 200 (application/json)
-    + Attributes(DatasetResourceList)
-
-### Download a Resource [GET /catalog/resources/{datasetId}/{resourceId}]
-Download a specific Resource. For _published_ Datasets, any user can call this endpoint, otherwise access is restricted to Dataset members.
-
-+ Parameters
-    + resourceId: README.MD (string) - The ID (filename) of the resource to download.
-+ Response 200
-
-### Delete a Resource [DELETE /catalog/resources/{datasetId}/{resourceId}]
-Delete a specific Resource. Only Users or Clients with `MANAGE` permissions for a Dataset can call this operation.
-
-+ Parameters
-    + resourceId: SensorOverview1920.pdf (string) - The ID (filename) of the resource to delete.
-+ Response 204
-
 # Group Data API
 Once a client knows the Datasets that are available to interact with (thanks to the Catalog API), it can call the HTTP Operations of the Data API 
 for inserting or retrieving data.

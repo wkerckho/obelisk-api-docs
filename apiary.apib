@@ -391,6 +391,10 @@ With the appropiate permissions, clients can query data over a range of Datasets
 Retrieve Metric Event objects in the form they were ingested into a Dataset. Various Metrics of various Datasets can be combined into a single resultset.
 
 + Request (application/json)
+    + Headers
+    
+            Authorization: Bearer Token
+            
     + Attributes (EventsQuery)
 
 + Response 200 (application/json)
@@ -400,6 +404,10 @@ Retrieve Metric Event objects in the form they were ingested into a Dataset. Var
 Calculate aggregate data (e.g. minimum value, count) over a specific Data Range. Aggregates can be calculated across Metric and Dataset boundaries, but are restricted to Metrics of type `::number` (including numerical Metrics derived from `::json`, e.g. `AirqualityObserved::json/temperature.value::number`).
 
 + Request (application/json)
+    + Headers
+    
+            Authorization: Bearer Token
+            
     + Attributes (StatsQuery)
 
 + Response 200 (application/json)
@@ -418,6 +426,7 @@ Get a continuous stream of Metric Events matching the original Data Stream param
     + Headers
 
             Accept: text/event-stream
+            Authorization: Bearer Token
 
 + Response 200 (text/event-stream)
     + Body
@@ -439,6 +448,12 @@ A successful export will result in a compressed CSV file that can be downloaded 
 
 + Parameters
     + exportId: f3fd1324940 (string) - The ID of the export to download.
+    
++ Request
+    + Headers
+    
+            Authorization: Bearer Token
+            
 
 + Response 200 (application/zip)
 

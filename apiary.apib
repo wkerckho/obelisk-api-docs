@@ -4,12 +4,12 @@ HOST: https://rc.obelisk.ilabt.imec.be/api/v3
 # Obelisk
 Welcome to the Developer Documentation for the Obelisk Platform.
 
-The following Reference material details how to authenticate, how discover datasets and how to interact with the data (Querying, Streaming, Adding new data).
+The following Reference material details how to authenticate, how to discover datasets and how to interact with the data (Querying, Streaming, Adding new data).
 
 # Glossary
 | Term          | Description                                                                                                                                                                                                                                                                                                                                                                                        |
 |---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Dataset**   | A Dataset is the primary unit of how data is organized in Obelisk. It represents a coherent collection of data for a specific domain, project or site.                                                                                                                                                                                                                                             |
+| **Dataset**   | A Dataset is the primary unit data organizationin Obelisk. It represents a coherent collection of data for a specific domain, project or site.                                                                                                                                                                                                                                             |
 | **Metric**    | A Metric represents a specific type of data. It is defined using a name and a type suffix. For example `humidity.rh::number` defines relative humidity measurements with a numerical value. Each Dataset can define its own unique set of Metrics (i.e. DatasetA and DatasetB can both define a Metric `power::number` but this does not necessarily mean they are referring to the same concept). |
 | **Event**     | An Event represents a single data point for a Metric (e.g. a sensor measurement), having a timestamp, a value and a set of meta-data attributes (e.g. a location).                                                                                                                                                                                                                                 |
 | **Thing**     | When publishing an Event to a Metric for a Dataset, an optional source Thing can be specified (as a user-defined ID). Things can be listed for a Dataset and additional meta-data can be attached to it. Use Things to help organizing your data!                                                                                                                                                  |
@@ -35,7 +35,7 @@ A very important decision is if your client is confidential or not. It will dete
 The first step is to get a *proof of authentication*. This is the `code` that will be returned to you after this step. It will be sent in the form of a redirect to a registered URI.
 
 > **One exception: Confidential clients that have non-public accessible code can keep a `clientSecret` hidden from public view!**   
-> They can hit the [Token endpoint](#/reference/auth-api/token) immediatly as their client credentials act as *a proof of authentication*.**
+> They can hit the [Token endpoint](#/reference/auth-api/token) immediately as their client credentials act as *a proof of authentication*.**
 
 ### GET Authentication URL [GET /auth/auth{?response_type,state,scope,client_id,client_secret,code_challenge,code_challenge_method,redirect_uri,id_token}]
 You should point your user agent to this URL. A 302 Redirect should return you to the appropriate login page where the user can login using his/her desired Identity Provider.

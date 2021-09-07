@@ -714,8 +714,8 @@ When querying raw events using this DataRange, the resultset will contain values
 + `grant_type` (enum[string], required) - Which kind of *proof of authentication* are you sending.
     + `authorization_code` - This requires you to send the `code` parameter along and either `code_verifier` or `client_secret`.
     + `client_credentials` - This requires you to send the `clientSecret` parameters along.
-+ code (string) - The `code` retrieved from the authentication step. *(not required for `client_credentials` grant_type)*
-+ `client_id` (string, required) - The client_iod of the Client that is being used to authenticate (with)
++ code (string) - The `code` retrieved from the authioentication step. *(not required for `client_credentials` grant_type)*
++ `client_id` (string, required) - The client_id of the Client that is being used to authenticate (with)
 + One of
     + `code_verifier` (string, required) - The code_verifier that was being used to generate the code_challenge in the [Authentication step](#/reference/auth-api/authentication). 
         
@@ -728,7 +728,7 @@ When querying raw events using this DataRange, the resultset will contain values
 ## CodePKCETokenRequest (object)
 + `grant_type`: `authorization_code` (fixed, required) - This requires you to send the `code` and `code_verifier` paramteres along
 + code (string) - The `code` retrieved from the authentication step. 
-+ `client_id` (string, required) - The client_iod of the Client that is being used to authenticate (with)
++ `client_id` (string, required) - The client_id of the Client that is being used to authenticate (with)
 + `code_verifier` (string, required) - The code_verifier that was being used to generate the code_challenge in the [Authentication step](#/reference/auth-api/authentication).
     Read more about [PKCE](https://rc.obelisk.ilabt.imec.be/docs/guides/auth/#pkce-extension) and how to generate a code_verifier.
 

@@ -362,7 +362,7 @@ Retrieve Metric Event objects in the form they were ingested into a Dataset. Var
 + Response 200 (application/json)
     + Attributes (EventsQueryResult)
 
-### Getting Aggregate Data [POST /data/query/events/stats]
+### Getting Aggregate Data [POST /data/query/stats]
 Calculate aggregate data (e.g. minimum value, count) over a specific Data Range. Aggregates can be calculated across Metric and Dataset boundaries, but are restricted to Metrics of type `::number` (including numerical Metrics derived from `::json`, e.g. `AirqualityObserved::json/temperature.value::number`).
 
 + Request (application/json)

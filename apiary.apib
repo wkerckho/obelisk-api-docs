@@ -375,7 +375,7 @@ Calculate aggregate data (e.g. minimum value, count) over a specific Data Range.
 + Response 200 (application/json)
     + Attributes (StatsQueryResult)
 
-## Streaming Data [/data/streams/{streamId}]
+## Streaming Data [/data/streams/{streamId}{?receiveBacklog}]
 Clients can request new Data Streams using the Catalog API (or via Obelisk Web). Once a Data Stream has been successfully created, the client can open a streaming session using the following endpoint:
 
 ### Opening a Stream [GET]
@@ -383,6 +383,7 @@ Get a continuous stream of Metric Events matching the original Data Stream param
 
 + Parameters
     + streamId: 4a04-b994 (string) - The ID of the stream to open.
+    + receiveBacklog: false (boolean) - Wether to receive events that were missed since last time the client was connected. If set to 'false' (default), Obelisk starts streaming live data immediately.
 
 + Request
     + Headers

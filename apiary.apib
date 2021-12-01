@@ -77,6 +77,8 @@ yes             | no                | *(Immediately go to [Token](#/reference/au
 ## Token [/auth/token]
 Exchange a `code` for a token. The [Authentication step](#/reference/auth-api/authentication) gave you a `code` as *proof of authentication*. You can now use it to exchange it with a token.
 
+> In the case of a **confidential client acting on its own behalf**, you are instead exchanging a *client credentials pair* for a token! _(see below)_
+
 **Response format**
 
 ```json
@@ -101,7 +103,7 @@ key | description
 
 
 
-### Getting a Token [POST]
+### Requesting a Token [POST]
 You can send quite a few parameters along (as you can see in the [TokenRequest](#/data-structures/0/token-request) data structure.
 To simplify things, you can use the table below and pick the format that you need to send.
 

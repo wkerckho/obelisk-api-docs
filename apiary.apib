@@ -29,7 +29,7 @@ With `access_token` obviously replaced by the Access Token that you received fro
 
 **Client options**
 
-A very important decision is if your client is confidential or not. It will determine how you have to login to keep your client secure. To help you with this decision you can read about this in the [Authentication guide](https://rc.obelisk.ilabt.imec.be/docs/guides/auth/#creating-a-client).
+A very important decision is if your client is confidential or not. It will determine how you have to login to keep your client secure. To help you with this decision you can read about this in the [Authentication guide](https://obelisk.ilabt.imec.be/docs/guides/auth/#creating-a-client).
 
 ## Authentication [/auth/auth]
 The first step is to get a *proof of authentication*. This is the `code` that will be returned to you after this step. It will be sent in the form of a redirect to a registered URI.
@@ -59,7 +59,7 @@ yes             | no                | *(Immediately go to [Token](#/reference/au
     + `client_id` (string) - The clientId of the client that is being used to log in with.
     + `code_challenge` (string, optional) - **If your code is publicly readable, always use a code challenge!** 
     
-        Read more about [PKCE](https://rc.obelisk.ilabt.imec.be/docs/guides/auth/#pkce-extension) and how to generate a code_challenge.
+        Read more about [PKCE](https://obelisk.ilabt.imec.be/docs/guides/auth/#pkce-extension) and how to generate a code_challenge.
         
     + `code_challenge_method`: `S256` (string, optional) - Tell the backend which hash method you've used.
     + `redirect_uri` (string, optional) - Full https URL that will be called with the `code` after the authentication procedure on the backend is done.
@@ -228,7 +228,7 @@ Instead of exposing the Catalog API as a traditional set of REST endpoints, we o
 Our Catalog Data Model contains a lot of relations between types and the expressive GraphQL Query mechanism facilitates in getting exactly 
 the information you need, with a minimal amount of requests needed. 
 
-The following paragraph gives some examples of useful queries. The full documentation can be found [here](https://rc.obelisk.ilabt.imec.be/apiconsole/).
+The following paragraph gives some examples of useful queries. The full documentation can be found [here](https://obelisk.ilabt.imec.be/apiconsole/).
 
 ### Example GraphQL Queries
 #### Discover which Datasets you have access to
@@ -682,7 +682,7 @@ When querying raw events using this DataRange, the resultset will contain values
     + `client` - **To authenticate as a client application at least `client` scope is required.**
 + `client_id` (string) - The clientId of the client that is being used to log in (with).
 + `code_challenge` (string) - **If your code is publicly readable, always use a code challenge!**
-    Read more about [PKCE](https://rc.obelisk.ilabt.imec.be/docs/guides/auth/#pkce-extension) and how to generate a code_challenge.
+    Read more about [PKCE](https://obelisk.ilabt.imec.be/docs/guides/auth/#pkce-extension) and how to generate a code_challenge.
 + `code_challenge_method`: `S256` (fixed) - Tell the backend which hash method you used. *(SHA-256)*.
 + `redirect_uri` (string, optional) - Full https URL that will be called with the `code` after the authentication procedure on the backend is done.
 + `id_token` (string, optional) - Send an ID Token as proof of your authentication. This will make you skip login, if there is a session still active for you on the Obelisk Auth backend.
@@ -692,7 +692,7 @@ When querying raw events using this DataRange, the resultset will contain values
 + state (string) - A url-encoded string representing state. This string will be sent back in its integrity to the client.
 + scope: `openid` (string) - **To authenticate on behalf of a user at least `openid` scope is required.**
 + `client_id` (string) - The clientId of the client that is being used to log in (with).
-+ `code_challenge` (string) - Read more about [PKCE](https://rc.obelisk.ilabt.imec.be/docs/guides/auth/#pkce-extension) and how to generate a code_challenge.
++ `code_challenge` (string) - Read more about [PKCE](https://obelisk.ilabt.imec.be/docs/guides/auth/#pkce-extension) and how to generate a code_challenge.
 + `code_challenge_method`: `S256` (fixed) - Tell the backend which hash method you used. *(SHA-256)*.
 + `redirect_uri` (string, optional) - Full https URL that will be called with the `code` after the authentication procedure on the backend is done.
 + `id_token` (string, optional) - Send an ID Token as proof of your authentication. This will make you skip login, if there is a session still active for you on the Obelisk Auth backend.
@@ -702,7 +702,7 @@ When querying raw events using this DataRange, the resultset will contain values
 + state (string) - A url-encoded string representing state. This string will be sent back in its integrity to the client.
 + scope: `client` (string) - **To authenticate as a client application at least `client` scope is required.**
 + `client_id` (string) - The clientId of the client that is being used to log in (with).
-+ `code_challenge` (string) - Read more about [PKCE](https://rc.obelisk.ilabt.imec.be/docs/guides/auth/#pkce-extension) and how to generate a code_challenge.
++ `code_challenge` (string) - Read more about [PKCE](https://obelisk.ilabt.imec.be/docs/guides/auth/#pkce-extension) and how to generate a code_challenge.
 + `code_challenge_method`: `S256` (fixed) - Tell the backend which hash method you used. *(SHA-256)*.
 + `redirect_uri` (string, optional) - Full https URL that will be called with the `code` after the authentication procedure on the backend is done.
 + `id_token` (string, optional) - Send an ID Token as proof of your authentication. This will make you skip login, if there is a session still active for you on the Obelisk Auth backend.
@@ -724,7 +724,7 @@ When querying raw events using this DataRange, the resultset will contain values
 + One of
     + `code_verifier` (string, required) - The code_verifier that was being used to generate the code_challenge in the [Authentication step](#/reference/auth-api/authentication). 
         
-        Read more about [PKCE](https://rc.obelisk.ilabt.imec.be/docs/guides/auth/#pkce-extension) and how to generate a code_verifier.
+        Read more about [PKCE](https://obelisk.ilabt.imec.be/docs/guides/auth/#pkce-extension) and how to generate a code_verifier.
         
         **Use with publicly accessible clients**
     + `client_secret` (string, required) - The client_secret of the Client that is being used to authenticate (with)
@@ -735,7 +735,7 @@ When querying raw events using this DataRange, the resultset will contain values
 + code (string) - The `code` retrieved from the authentication step. 
 + `client_id` (string, required) - The client_id of the Client that is being used to authenticate (with)
 + `code_verifier` (string, required) - The code_verifier that was being used to generate the code_challenge in the [Authentication step](#/reference/auth-api/authentication).
-    Read more about [PKCE](https://rc.obelisk.ilabt.imec.be/docs/guides/auth/#pkce-extension) and how to generate a code_verifier.
+    Read more about [PKCE](https://feobelisk.ilabt.imec.be/docs/guides/auth/#pkce-extension) and how to generate a code_verifier.
 
 ## CodeNoPKCETokenRequest (object)
 + `grant_type`: `authorization_code` (fixed, required) - This requires you to send the `code` and `code_verifier` paramteres along

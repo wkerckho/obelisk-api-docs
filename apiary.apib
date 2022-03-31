@@ -87,6 +87,7 @@ Exchange a `code` for a token. The [Authentication step](#/reference/auth-api/au
     "access_token" : "XNQNtuEZDfarzeDN",
     "id_token" : "eyJraWQiOiI4MWQ...aBNlpuJorINalsKgrFs6fCCYPw",
     "max_idle_time" : 3600,
+    "expires_in" : 3600,
     "max_valid_time": 86400,
     "remember_me" : false
 }
@@ -95,9 +96,10 @@ Exchange a `code` for a token. The [Authentication step](#/reference/auth-api/au
 key | description
 --- | -----------
 `token_type` | The type of access_token. Helps to use it correctly.
-`access_token`| Your *access_token* to use as Bearer Token for Obelisk API calls.
+`access_token`| Your *access_token* to use as Bearer Token for Obeldisk API calls.
 `id_token`| Your id_token, used for customizing your application to some user values. If you store it, you can send it to the [Authentication endpoint](#/reference/auth-api/authentication) to skip login, if there is a session active for that user.
 `max_idle_time`| Maximum time (in seconds) the access_token stays valid, if not being used on API calls.
+`expires_in`| Maximum time (in seconds) the access_token stays valid, if not being used on API calls. (alias for `max_idle_time`)
 `max_valid_time`| Maximum time (in sacceconds) the access_token stays valid, even if it is being used within max_idle_time windows.
 `remember_me`| This is a hint towards the Client application. It is set to `true` if the user toggled *remember me* during the login proces. It is up to your own application to support this or not. The `remember_me` is a hint towards the Client application.
 
